@@ -1,4 +1,4 @@
-dataClass=com.balram.applocker.model.Event
+dataClass=com.strime.applogger.model.Event
 tableName=app_event
 # --ID--
 fieldName=event_id

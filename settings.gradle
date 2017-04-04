@@ -1,1 +1,1 @@
-include ':app', ':locker'
+include ':app'

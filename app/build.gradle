@@ -2,9 +2,9 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "25.0.2"
     defaultConfig {
-        applicationId "com.balram.applocker"
+        applicationId "com.strime.applogger"
         minSdkVersion 21
         targetSdkVersion 21
         versionCode 1
@@ -36,7 +36,9 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.0.1'
 
     testCompile 'junit:junit:4.12'
-    compile project(':locker')
+
+    compile 'com.github.balrampandey19:AppLocker:1.0.1'
+
     compile 'com.github.alxrm:animated-clock-icon:1.0.2'
 
     compile 'com.android.support:design:25.2.0'
@@ -47,5 +49,6 @@ dependencies {
     compile 'com.github.bassaer:materialdesigncolors:1.0.0'
 
     compile 'com.github.PhilJay:MPAndroidChart:v3.0.2'
+    compile 'com.github.florent37:expectanim:1.0.2'
 
 }
