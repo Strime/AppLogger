@@ -34,6 +34,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import rm.com.clocks.ClockDrawable;
+import rm.com.clocks.ClockImageView;
 import rm.com.clocks.Stroke;
 
 /**
@@ -43,7 +44,6 @@ import rm.com.clocks.Stroke;
 public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdapter.EventViewHolder> {
     private Context ctx;
     private ToolChangedListener listener;
-
     public EventNotifAdapter(Context context, Cursor cursor, ToolChangedListener l) {
         super(context, cursor);
         this.ctx = context;
@@ -52,16 +52,10 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
 
     public static class EventViewHolder extends RecyclerView.ViewHolder {
         CardView cv;
-        PieChart pieChart;
-        BarChart barChart;
-        TextView titleCardView;
-        TextView textExplanation;
-        FloatingActionButton fabTools;
+        ClockImageView clockImageView;
+        TextView text;
 
         EventNotifAdapter parent;
-
-        boolean isPie;
-        boolean isShownByDuration;
 
         EventViewHolder(View view, final EventNotifAdapter p) {
             super(view);
@@ -70,59 +64,25 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
             cv.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    isPie = !isPie;
-                    parent.notifyDataSetChanged();
-                }
-            });
-            pieChart = (PieChart) view.findViewById(R.id.pie_chart);
-            barChart = (BarChart) view.findViewById(R.id.bar_chart);
-
-            titleCardView = (TextView) view.findViewById(R.id.title_card);
-            textExplanation = (TextView) view.findViewById(R.id.text_explanation);
-
-            pieChart = Tools.configurePieChart(pieChart);
-            barChart = Tools.configureBarChart(barChart);
-
-            fabTools = (FloatingActionButton) view.findViewById(R.id.fabTools);
-            fabTools.setEnabled(true);
-            fabTools.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    isShownByDuration = !isShownByDuration;
-                    parent.onToolChanged(isShownByDuration);
+                    //parent.notifyDataSetChanged();
                 }
             });
 
-            isPie = true;
-            isShownByDuration = true;
+            clockImageView = (ClockImageView) view.findViewById(R.id.time_marker);
+
+            text = (TextView) view.findViewById(R.id.text_explanation);
 
             updateUI();
         }
 
-        void updateUI() {
-            pieChart.setVisibility(isPie?View.VISIBLE:View.GONE);
-            barChart.setVisibility(isPie?View.GONE:View.VISIBLE);
-
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textExplanation.getLayoutParams();
-            params.addRule(RelativeLayout.BELOW, isPie ? R.id.pie_chart : R.id.bar_chart);
-            textExplanation.setText(isShownByDuration ? "Time in second spend on each applications" : "Number of time you opened each applications");
-
-        }
+        void updateUI() {        }
     }
 
-    private void onToolChanged(boolean isShownByDuration) {
-        this.listener.onToolChanged(isShownByDuration);
-    }
-
-    public void setClock(ImageView iv, Timestamp start, Timestamp end, long duration) {
+    public void initClock(ImageView iv, Timestamp start) {
 
         Calendar startCal = Calendar.getInstance();
         startCal.setTimeZone(TimeZone.getDefault());
         startCal.setTimeInMillis(start.getTime());
-        Calendar endCal = Calendar.getInstance();
-        endCal.setTimeZone(TimeZone.getDefault());
-        endCal.setTimeInMillis(end.getTime());
-
 
         ClockDrawable clock = ClockDrawable.builder(ctx)
                 .hours(startCal.get(Calendar.HOUR_OF_DAY))                 // initial time hours
@@ -130,7 +90,7 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
                 .withColor(Color.DKGRAY)                                    // set icon color
                 .withFrameWidth(Stroke.REGULAR)                             // set frame width
                 .withPointerWidth(Stroke.THIN)                              // set pointer width
-                .withDuration(200L*1+duration)                                         // set animation duration in millis (600L by default)
+                //.withDuration(200L*1+duration)                            // set animation duration in millis (600L by default)
                 .withInterpolator(new DecelerateInterpolator())             // set animation interpolator (default is OverShootInterpolator)
                 .into(iv);                                                  // attach the Drawable you built to ImageView and returns Drawable
     }
@@ -143,10 +103,9 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
         return time < 10 ? "0"+time:""+time;
     }
 
-
     @Override
     public EventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_app_layout, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_notif_layout, parent, false);
         EventViewHolder evh = new EventViewHolder(v, this);
         return evh;
     }
@@ -159,67 +118,15 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
     @Override
     public void onBindViewHolder(EventViewHolder viewHolder, Cursor cursor) {
         viewHolder.updateUI();
-        if(viewHolder.isPie) {
+        long minInserted = Long.MAX_VALUE;
+        String sample ="";
+        do {
+            minInserted = Math.min(cursor.getLong(cursor.getColumnIndexOrThrow("inserted_time")),minInserted);
+            sample = cursor.getString(cursor.getColumnIndexOrThrow("event_name"));
+        } while(cursor.moveToNext());
+        viewHolder.text.setText(sample);
 
-            ArrayList<PieEntry> entries = new ArrayList<>();
-            if(viewHolder.isShownByDuration) {
-                Tools.getEntriesFromCursorTime(cursor, entries);
-            } else {
-                Tools.getEntriesFromCursorOcc(cursor, entries);
-            }
-            PieDataSet dataSet = new PieDataSet(entries, "");
-
-            Tools.configureDataSet(dataSet);
-
-            PieData data = new PieData(dataSet);
-            data.setValueFormatter(new DefaultValueFormatter(0));
-            data.setValueTextSize(11f);
-            data.setValueTextColor(Color.WHITE);
-
-            viewHolder.pieChart.setData(data);
-
-            // undo all highlights
-            viewHolder.pieChart.highlightValues(null);
-
-            // update pie chart
-            viewHolder.pieChart.invalidate();
-            viewHolder.pieChart.animateY(500);
-        } else {
-            ArrayList<String> labels = new ArrayList<>();
-            ArrayList<BarEntry> entries = new ArrayList<>();
-            if(viewHolder.isShownByDuration) {
-                Tools.getEntriesFromCursorTime(labels, entries, cursor);
-            } else {
-                Tools.getEntriesFromCursorOcc(labels, entries, cursor);
-            }
-            BarDataSet dataSet = new BarDataSet(entries, "");
-            Tools.configureDataSet(dataSet);
-
-            BarData data = new BarData(dataSet);
-            data.setValueFormatter(new DefaultValueFormatter(0));
-            data.setValueTextSize(11f);
-
-            data.setValueTextColor(Color.BLACK);
-
-            viewHolder.barChart.setData(data);
-            viewHolder.barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
-            viewHolder.barChart.getXAxis().setLabelCount(labels.size());
-
-            // undo all highlights
-            viewHolder.barChart.highlightValues(null);
-
-            // update pie chart
-            viewHolder.barChart.invalidate();
-            viewHolder.barChart.animateXY(500,500);
-        }
-
-
-        viewHolder.titleCardView.setText("Navigation into applications");
-
-        /*setClock(viewHolder.clock, ts_begin, ts_end, d);
-
-        viewHolder.appNameTextView.setText(cursor.getString(cursor.getColumnIndexOrThrow("event_name")));
-        viewHolder.durationTextView.setText(String.format("%s (%s)",startAt,duration));*/
+        initClock(viewHolder.clockImageView, new Timestamp(minInserted));
     }
 
 }

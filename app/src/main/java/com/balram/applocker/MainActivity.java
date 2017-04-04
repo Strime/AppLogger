@@ -3,15 +3,21 @@ package com.balram.applocker;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.AppOpsManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.Settings;
+import android.service.notification.NotificationListenerService;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomSheetBehavior;
@@ -19,6 +25,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -29,7 +37,8 @@ import com.balram.applocker.adapter.EventNotifAdapter;
 import com.balram.applocker.database.SqlHelper;
 import com.balram.applocker.interfaces.ToolChangedListener;
 import com.balram.applocker.model.Event;
-import com.balram.applocker.service.BackgroundService;
+import com.balram.applocker.service.ListenningService;
+import com.balram.applocker.service.NotificationService;
 import com.balram.locker.utils.Locker;
 import com.balram.locker.view.AppLocker;
 import com.balram.locker.view.LockActivity;
@@ -49,6 +58,7 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
     private static final int MEDIUM = 1;
     private static final int PRO = 2;
     private static final int ULTRA = 3;
+    private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
 
     private FloatingActionButton fab;
     private EventAdapter mAppAdapter;
@@ -71,6 +81,7 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
 
 
     private int confValue;
+    private NotificationService notificationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -180,6 +191,24 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         tvExplanation.setText(txt);
     }
 
+
+    private boolean showNotificationPermission() {
+        if (!isNotificationListenerEnabled()) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("This app needs to checks notifications");
+            builder.setMessage("Please grant access.");
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+                }
+            });
+            builder.show();
+            return false;
+        }
+        return true;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     private boolean showPhoneStatePermission() {
         if (!checkPackageUsagePermission()) {
@@ -213,10 +242,10 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
     }
 
     private void showListeningView() {
-        if(showPhoneStatePermission()) {
-            Intent intent = new Intent(getApplication(), BackgroundService.class);
-            intent.putExtra(BackgroundService.conf, confValue);
-            intent.putExtra(BackgroundService.action, BackgroundService.ACTIONS.STARTRECORDING);
+        if(showPhoneStatePermission() && showNotificationPermission()) {
+            Intent intent = new Intent(getApplication(), ListenningService.class);
+            intent.putExtra(ListenningService.conf, confValue);
+            intent.putExtra(ListenningService.action, ListenningService.ACTIONS.STARTRECORDING);
             startService(intent);
 
             try {
@@ -225,12 +254,13 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
                 mAppAdapter = new EventAdapter(MainActivity.this, r.getRawCursor(), this);
 
 
-                CloseableIterator<String[]> notifIte = getHelper().getEventIteratorTime(Event.APPLICATION);
+                CloseableIterator<String[]> notifIte = getHelper().getNotifIterator();
                 AndroidDatabaseResults notifResults = (AndroidDatabaseResults) notifIte.getRawResults();
                 mNotifAdapter = new EventNotifAdapter(MainActivity.this, notifResults.getRawCursor(), this);
 
                 if(r.getRawCursor().getCount() > 0) {
                     appRecycler.setAdapter(mAppAdapter);
+                    notifRecycler.setAdapter(mNotifAdapter);
                     //TODO : CHECK IF THERE IS DATA OR NOT
                     cardViewRecord.setVisibility(View.GONE);
                     appRecycler.setVisibility(View.VISIBLE);
@@ -246,7 +276,7 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
                     mAppAdapter.notifyDataSetChanged();
                 }
             };
-            registerReceiver(receiver, new IntentFilter(BackgroundService.APPFIND));
+            registerReceiver(receiver, new IntentFilter(ListenningService.APPFIND));
         }
     }
 
@@ -262,7 +292,7 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         super.onResume();
         if(receiver!=null){
             registerReceiver(receiver, new IntentFilter(
-                    BackgroundService.APPFIND));
+                    ListenningService.APPFIND));
         }
     }
 
@@ -309,7 +339,7 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
             intent.putExtra(Locker.TYPE, type);
             startActivityForResult(intent, type);
         }
-        if(isMyServiceRunning(BackgroundService.class)) {
+        if(isMyServiceRunning(ListenningService.class)) {
             fab.setImageResource(R.mipmap.stop);
         } else {
             fab.setImageResource(R.mipmap.record);
@@ -329,13 +359,54 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
 
     @Override
     public void onToolChanged(boolean isShownByDuration) {
-        try {
+        Notification n  = new Notification.Builder(this)
+                .setContentTitle("New mail from " + "test@gmail.com")
+                .setContentText("Subject")
+                .setSmallIcon(R.drawable.icon)
+                .setAutoCancel(false).build();
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0, n);
+
+        /*try {
             //TERNAIRE EN FONCTION DU BOOLEAN
             CloseableIterator<String[]> iterator = isShownByDuration ? getHelper().getEventIteratorTime(Event.APPLICATION) : getHelper().getEventIteratorOcc(Event.APPLICATION);
             AndroidDatabaseResults r = (AndroidDatabaseResults) iterator.getRawResults();
             mAppAdapter.swapCursor(r.getRawCursor());
         } catch (SQLException e) {
             e.printStackTrace();
+        }*/
+    }
+
+    private void listCurrentNotification() {
+        String result = "";
+        if (isNotificationListenerEnabled()) {
+            if (NotificationService.getCurrentNotifications() == null) {
+                return;
+            }
+            int n = NotificationService.mCurrentNotificationsCounts;
+            Log.d("WTDFFFF","dqssdqs : "+n);
         }
     }
+    private boolean isNotificationListenerEnabled() {
+        String pkgName = getPackageName();
+        final String flat = Settings.Secure.getString(getContentResolver(),
+                ENABLED_NOTIFICATION_LISTENERS);
+        if (!TextUtils.isEmpty(flat)) {
+            final String[] names = flat.split(":");
+            for (int i = 0; i < names.length; i++) {
+                final ComponentName cn = ComponentName.unflattenFromString(names[i]);
+                if (cn != null) {
+                    if (TextUtils.equals(pkgName, cn.getPackageName())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
+
 }
