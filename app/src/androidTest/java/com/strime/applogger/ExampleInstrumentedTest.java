@@ -1,11 +1,11 @@
-package com.balram.applocker;
+package com.strime.applogger;
 
 import android.content.Context;
 import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.balram.applocker.service.ListenningService;
+import com.strime.applogger.service.ListenningService;
 
 import org.junit.Before;
 import org.junit.Test;
