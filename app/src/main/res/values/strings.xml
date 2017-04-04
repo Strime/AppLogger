@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">AppLocker</string>
+    <string name="description">description</string>
+    <string name="voir_graphiques">Voir graphiques</string>
+    <string name="already_launched">SHARED_ALREAD_LAUNCHED</string>
+    <string name="android.systemui">com.android.systemui</string>
+    <string name="shared_tutorial">tutorial_needed</string>
 </resources>

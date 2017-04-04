@@ -1,0 +1,18 @@
+dataClass=com.balram.applocker.model.Event
+tableName=app_event
+# --ID--
+fieldName=event_id
+columnName=_id
+generatedId=true
+# --Inserted_time--
+fieldName=inserted_time
+columnName=insertedTime
+# --End_time--
+fieldName=end_time
+columnName=endTime
+# --appName--
+fieldName=app_name
+columnName=appName
+# --appName--
+fieldName=type_event
+columnName=typeEvent

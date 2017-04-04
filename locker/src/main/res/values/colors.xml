@@ -7,7 +7,7 @@
     <color name="light_blue">#FF78c8e6</color>
     <color name="primary">#ef5451</color>
     <color name="primary_dark">#c22115</color>
-    <color name="accent">#c22115</color>
+    <color name="accent">#b71c1c</color>
     <color name="button_color">@color/primary_dark</color>
 
 
@@ -60,16 +60,16 @@
     <color name="light_blue_color">#ff989ce8</color>
     <color name="rc_card_highlight_blue">#ff2980b9</color>
     <color name="rc_card_gray">#ff303030</color>
-    <color name="rc_card_gray_light">#fff0f0f0</color>
+    <color name="rc_card_gray_light">#f0f0f0</color>
     <color name="rc_card_border">#ff909090</color>
-    <color name="bg_color">#fff3f3f3</color>
+    <color name="bg_color">#f3f3f3</color>
     <color name="bg_color_darker">#ffd1d1d1</color>
     <color name="white_translucent">#EEFFFFFF</color>
     <color name="white_medium_translucent">#AAFFFFFF</color>
     <color name="white_more_translucent">#44FFFFFF</color>
     <color name="black_more_translucent">#44000000</color>
-    <color name="accent_primary">#ffbbbbbb</color>
-    <color name="accent_secondary">#ff7e7979</color>
+    <color name="accent_primary">#bbbbbb</color>
+    <color name="accent_secondary">#7e7979</color>
     <color name="redcarpet_splash">#fff40313</color>
     <color name="redcarpet_splash_translucent">#44f40313</color>
     <color name="redcarpet_black_translucent">#99000000</color>

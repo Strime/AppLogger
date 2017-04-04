@@ -1,0 +1,96 @@
+package com.balram.applocker.model;
+
+import android.support.v7.widget.RecyclerView;
+
+import java.io.Serializable;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.concurrent.TimeUnit;
+
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
+/**
+ * Created by GSA13442 on 28/02/2017.
+ */
+
+@DatabaseTable(tableName="app_event")
+public class Event implements Serializable {
+    public static final int APPLICATION = 0;
+    public static final int ACTION_SHUTDOWN = 1;
+    public static final int ACTION_NOTIFICATION = 2;
+    public static final int ACTION_PHONE = 3;
+
+    @DatabaseField(generatedId = true, columnName = "_id")
+    private int eventId;
+
+    @DatabaseField(columnName = "inserted_time")
+    private long insertedTime;
+
+    @DatabaseField(columnName = "end_time")
+    private long endTime;
+
+    @DatabaseField(columnName = "event_name")
+    private String appName;
+
+    @DatabaseField(columnName = "type_event")
+    private int typeEvent;
+
+
+    public Event() {
+        super();
+    }
+
+    public Event(String appName){
+        this(appName, APPLICATION);
+    }
+    public Event(String appName, int type){
+        super();
+
+        this.insertedTime =  System.currentTimeMillis();
+        this.endTime = System.currentTimeMillis();
+
+        this.appName=appName;
+        this.typeEvent = type;
+    }
+
+    public String getAppName() {
+        return appName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
+
+    public long getInsertedTime() {
+        return insertedTime;
+    }
+
+    public void setInsertedTime(long insertedTime) {
+        this.insertedTime = insertedTime;
+    }
+
+    public int getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(int eventId) {
+        this.eventId = eventId;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
+    public int getTypeEvent() {
+        return typeEvent;
+    }
+
+    public void setTypeEvent(int typeEvent) {
+        this.typeEvent = typeEvent;
+    }
+}
