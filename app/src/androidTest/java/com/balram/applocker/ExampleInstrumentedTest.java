@@ -1,12 +1,19 @@
 package com.balram.applocker;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.balram.applocker.service.BackgroundService;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static android.content.Context.NOTIFICATION_SERVICE;
 import static org.junit.Assert.*;
 
 /**
@@ -16,11 +23,33 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
-    @Test
-    public void useAppContext() throws Exception {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
+    private Context appContext;
 
-        assertEquals("com.balram.applocker", appContext.getPackageName());
+    @Before
+    public void before() throws Exception {
+        appContext = InstrumentationRegistry.getTargetContext();
     }
+
+    @Test
+    public void test_insert_notif_and_get_them() {
+        Intent intent = new Intent(appContext, BackgroundService.class);
+        int confValue = 1;
+        intent.putExtra(BackgroundService.conf, confValue);
+        intent.putExtra(BackgroundService.action, BackgroundService.ACTIONS.STARTRECORDING);
+        appContext.startService(intent);
+
+
+        Notification n  = new Notification.Builder(appContext)
+                .setContentTitle("New mail from " + "test@gmail.com")
+                .setContentText("Subject")
+                .setSmallIcon(R.drawable.icon)
+                .setAutoCancel(false).build();
+
+        NotificationManager notificationManager = (NotificationManager) appContext.getSystemService(NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0, n);
+
+    }
+
+
 }

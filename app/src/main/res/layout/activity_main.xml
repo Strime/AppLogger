@@ -86,9 +86,16 @@
         <!-- include bottom sheet -->
 
         <android.support.v7.widget.RecyclerView
-            android:id="@+id/event_listview"
+            android:id="@+id/event_app_recycler"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/event_notif_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/event_app_recycler"
             android:visibility="gone" />
 
     </RelativeLayout>

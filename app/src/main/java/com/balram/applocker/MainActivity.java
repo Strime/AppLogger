@@ -25,7 +25,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.balram.applocker.adapter.EventAdapter;
+import com.balram.applocker.adapter.EventNotifAdapter;
 import com.balram.applocker.database.SqlHelper;
+import com.balram.applocker.interfaces.ToolChangedListener;
+import com.balram.applocker.model.Event;
 import com.balram.applocker.service.BackgroundService;
 import com.balram.locker.utils.Locker;
 import com.balram.locker.view.AppLocker;
@@ -37,7 +40,7 @@ import com.j256.ormlite.dao.CloseableIterator;
 import java.sql.SQLException;
 
 
-public class MainActivity extends LockActivity implements EventAdapter.ToolChangedListener {
+public class MainActivity extends LockActivity implements ToolChangedListener {
 
     /**
      * CONF VALUES
@@ -47,22 +50,27 @@ public class MainActivity extends LockActivity implements EventAdapter.ToolChang
     private static final int PRO = 2;
     private static final int ULTRA = 3;
 
-    public static final int FAB_IS_SELECTED = 0;
-
-
     private FloatingActionButton fab;
-    private EventAdapter mAdapter;
+    private EventAdapter mAppAdapter;
+    private EventNotifAdapter mNotifAdapter;
 
-    private RecyclerView androidRecycler;
+    //RECYCLERS
+    private RecyclerView appRecycler;
+    private RecyclerView notifRecycler;
+
+    //SQL
     private SqlHelper mHelper;
+
     private BroadcastReceiver receiver;
 
     private CardView cardViewRecord;
     private SeekBar lvlRecordSlider;
     private TextView tvExplanation;
-    private int confValue;
     private BottomSheetBehavior bottomSheetBehavior;
     private View llBottomSheet;
+
+
+    private int confValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,9 +120,20 @@ public class MainActivity extends LockActivity implements EventAdapter.ToolChang
         });
 
         OpenHelperManager.setHelper(new SqlHelper(MainActivity.this));
-        androidRecycler = (RecyclerView) findViewById(R.id.event_listview);
+        /**
+         * APP RECYCLER
+         */
+        appRecycler = (RecyclerView) findViewById(R.id.event_app_recycler);
         LinearLayoutManager llm = new LinearLayoutManager(this);
-        androidRecycler.setLayoutManager(llm);
+        appRecycler.setLayoutManager(llm);
+
+        /**
+         * NOTIF RECYCLER
+         */
+        notifRecycler = (RecyclerView) findViewById(R.id.event_notif_recycler);
+        LinearLayoutManager llm_notif = new LinearLayoutManager(this);
+        notifRecycler.setLayoutManager(llm_notif);
+
 
         cardViewRecord = (CardView) findViewById(R.id.layoutRecord);
         tvExplanation = (TextView) findViewById(R.id.lvl_slider_explanation);
@@ -199,17 +218,23 @@ public class MainActivity extends LockActivity implements EventAdapter.ToolChang
             intent.putExtra(BackgroundService.conf, confValue);
             intent.putExtra(BackgroundService.action, BackgroundService.ACTIONS.STARTRECORDING);
             startService(intent);
-            AndroidDatabaseResults r;
+
             try {
-                CloseableIterator<String[]> iterator = getHelper().getEventIteratorTime();
-                r = (AndroidDatabaseResults) iterator.getRawResults();
-                mAdapter = new EventAdapter(MainActivity.this, r.getRawCursor(), this);
+                CloseableIterator<String[]> iterator = getHelper().getEventIteratorTime(Event.APPLICATION);
+                AndroidDatabaseResults r = (AndroidDatabaseResults) iterator.getRawResults();
+                mAppAdapter = new EventAdapter(MainActivity.this, r.getRawCursor(), this);
+
+
+                CloseableIterator<String[]> notifIte = getHelper().getEventIteratorTime(Event.APPLICATION);
+                AndroidDatabaseResults notifResults = (AndroidDatabaseResults) notifIte.getRawResults();
+                mNotifAdapter = new EventNotifAdapter(MainActivity.this, notifResults.getRawCursor(), this);
 
                 if(r.getRawCursor().getCount() > 0) {
-                    androidRecycler.setAdapter(mAdapter);
+                    appRecycler.setAdapter(mAppAdapter);
                     //TODO : CHECK IF THERE IS DATA OR NOT
                     cardViewRecord.setVisibility(View.GONE);
-                    androidRecycler.setVisibility(View.VISIBLE);
+                    appRecycler.setVisibility(View.VISIBLE);
+                    notifRecycler.setVisibility(View.VISIBLE);
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -218,7 +243,7 @@ public class MainActivity extends LockActivity implements EventAdapter.ToolChang
             receiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    mAdapter.notifyDataSetChanged();
+                    mAppAdapter.notifyDataSetChanged();
                 }
             };
             registerReceiver(receiver, new IntentFilter(BackgroundService.APPFIND));
@@ -306,9 +331,9 @@ public class MainActivity extends LockActivity implements EventAdapter.ToolChang
     public void onToolChanged(boolean isShownByDuration) {
         try {
             //TERNAIRE EN FONCTION DU BOOLEAN
-            CloseableIterator<String[]> iterator = isShownByDuration ? getHelper().getEventIteratorTime() : getHelper().getEventIteratorOcc();
+            CloseableIterator<String[]> iterator = isShownByDuration ? getHelper().getEventIteratorTime(Event.APPLICATION) : getHelper().getEventIteratorOcc(Event.APPLICATION);
             AndroidDatabaseResults r = (AndroidDatabaseResults) iterator.getRawResults();
-            mAdapter.swapCursor(r.getRawCursor());
+            mAppAdapter.swapCursor(r.getRawCursor());
         } catch (SQLException e) {
             e.printStackTrace();
         }

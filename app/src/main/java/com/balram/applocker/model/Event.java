@@ -24,17 +24,17 @@ public class Event implements Serializable {
     @DatabaseField(generatedId = true, columnName = "_id")
     private int eventId;
 
-    @DatabaseField(columnName = "inserted_time")
-    private long insertedTime;
-
-    @DatabaseField(columnName = "end_time")
-    private long endTime;
-
     @DatabaseField(columnName = "event_name")
     private String appName;
 
     @DatabaseField(columnName = "type_event")
     private int typeEvent;
+
+    @DatabaseField(columnName = "inserted_time")
+    private long insertedTime;
+
+    @DatabaseField(columnName = "end_time")
+    private long endTime;
 
 
     public Event() {

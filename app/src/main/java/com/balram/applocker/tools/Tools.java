@@ -19,6 +19,14 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.utils.MPPointF;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -73,29 +81,36 @@ public class Tools {
         return pieChart;
     }
 
-    public static ArrayList<PieEntry> getEntriesFromCursorTime(Cursor cursor) {
-        ArrayList<PieEntry> entries = new ArrayList<>();
-        int i=0;
+    public static void getEntriesFromCursorTime(Cursor cursor, ArrayList<PieEntry> entries) {
+        Map<String, Long> unsortMap = new HashMap<>();
+
         do {
             long begin = cursor.getInt(cursor.getColumnIndexOrThrow("totalInsert"));
             long end = cursor.getInt(cursor.getColumnIndexOrThrow("totalEnd"));
             long duration = TimeUnit.MILLISECONDS.toSeconds(end - begin);
 
-            entries.add(new PieEntry(duration,cursor.getString(cursor.getColumnIndex("event_name"))));
-            i++;
-        } while(cursor.moveToNext() && i< PIE_CHART_MAX_ELEM);
-        return entries;
+            String appName = cursor.getString(cursor.getColumnIndex("event_name"));
+            unsortMap.put(appName, duration);
+
+        } while(cursor.moveToNext());
+
+        Map<String, Long> sortedMap = sortByValue(unsortMap);
+        int i=0;
+        for(String key : sortedMap.keySet()) {
+            if(i < PIE_CHART_MAX_ELEM) {
+                entries.add(new PieEntry(sortedMap.get(key), key));
+                i++;
+            }
+        }
     }
 
 
-    public static ArrayList<PieEntry> getEntriesFromCursorOcc(Cursor cursor) {
-        ArrayList<PieEntry> entries = new ArrayList<>();
+    public static void getEntriesFromCursorOcc(Cursor cursor, ArrayList<PieEntry> entries) {
         int i=0;
         do {
             entries.add(new PieEntry(cursor.getInt(cursor.getColumnIndex("nbOcc")),cursor.getString(cursor.getColumnIndex("event_name"))));
             i++;
         } while(cursor.moveToNext() && i< PIE_CHART_MAX_ELEM);
-        return entries;
     }
 
 
@@ -118,7 +133,7 @@ public class Tools {
 
         barChart.setPinchZoom(false);
         barChart.setDrawBarShadow(false);
-        barChart.setDrawValueAboveBar(false);
+        barChart.setDrawValueAboveBar(true);
 
         barChart.getDescription().setText("");
         barChart.setDrawGridBackground(false);
@@ -128,7 +143,6 @@ public class Tools {
         xAxis.setDrawGridLines(false);
         xAxis.setGranularity(1.0f);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setValueFormatter(new IndexAxisValueFormatter());
 
         YAxis rightAxis = barChart.getAxisRight();
         rightAxis.setEnabled(false);
@@ -155,16 +169,24 @@ public class Tools {
     }
 
     public static void getEntriesFromCursorTime(ArrayList<String> labels, ArrayList<BarEntry> entries, Cursor cursor) {
-        do {
+        Map<String, Long> unsortMap = new HashMap<>();
 
+        do {
             long begin = cursor.getInt(cursor.getColumnIndexOrThrow("totalInsert"));
             long end = cursor.getInt(cursor.getColumnIndexOrThrow("totalEnd"));
             long duration = TimeUnit.MILLISECONDS.toSeconds(end - begin);
 
             String appName = cursor.getString(cursor.getColumnIndex("event_name"));
-            labels.add(appName);
-            entries.add(new BarEntry(labels.indexOf(appName),duration));
+            unsortMap.put(appName, duration);
+
         } while(cursor.moveToNext());
+
+        Map<String, Long> sortedMap = sortByValue(unsortMap);
+
+        for(String key : sortedMap.keySet()) {
+            labels.add(key);
+            entries.add(new BarEntry(labels.indexOf(key),sortedMap.get(key)));
+        }
     }
 
     public static void getEntriesFromCursorOcc(ArrayList<String> labels, ArrayList<BarEntry> entries, Cursor cursor) {
@@ -174,4 +196,36 @@ public class Tools {
             entries.add(new BarEntry(labels.indexOf(appName),cursor.getInt(cursor.getColumnIndex("nbOcc"))));
         } while(cursor.moveToNext());
     }
+
+
+
+
+
+    //SORTING
+    private static Map<String, Long> sortByValue(Map<String, Long> unsortMap) {
+
+        // 1. Convert Map to List of Map
+        List<Map.Entry<String, Long>> list =
+                new LinkedList<>(unsortMap.entrySet());
+
+        // 2. Sort list with Collections.sort(), provide a custom Comparator
+        //    Try switch the o1 o2 position for a different order
+        Collections.sort(list, new Comparator<Map.Entry<String, Long>>() {
+            public int compare(Map.Entry<String, Long> o1,
+                               Map.Entry<String, Long> o2) {
+                return (o2.getValue()).compareTo(o1.getValue());
+            }
+        });
+
+        // 3. Loop the sorted list and put it into a new insertion order Map LinkedHashMap
+        Map<String, Long> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<String, Long> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+
+        return sortedMap;
+    }
+
+
 }

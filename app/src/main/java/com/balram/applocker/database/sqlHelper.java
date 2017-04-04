@@ -61,13 +61,15 @@ public class SqlHelper extends OrmLiteSqliteOpenHelper {
     }
 
 
-    public CloseableIterator<String[]> getEventIteratorOcc() throws SQLException {
-        return getEventDao().queryRaw("SELECT COUNT(inserted_time) AS nbOcc, event_name, _id FROM app_event GROUP BY event_name ORDER BY nbOcc desc").closeableIterator();
+    public CloseableIterator<String[]> getEventIteratorOcc(int id_type_event) throws SQLException {
+        return getEventDao().queryRaw("SELECT COUNT(inserted_time) AS nbOcc, event_name, _id FROM app_event where type_event = " + id_type_event +
+                " GROUP BY event_name ORDER BY nbOcc desc").closeableIterator();
     }
 
-    public CloseableIterator<String[]> getEventIteratorTime() throws SQLException {
-        return getEventDao().queryRaw("SELECT sum(inserted_time) AS totalInsert, sum(end_time) AS totalEnd, event_name, _id " +
-                "FROM app_event GROUP BY event_name").closeableIterator();
+    public CloseableIterator<String[]> getEventIteratorTime(int id_type_event) throws SQLException {
+        return getEventDao().queryRaw("SELECT sum(inserted_time) AS totalInsert, sum(end_time) AS totalEnd, event_name, _id" +
+                " FROM app_event where type_event = " + id_type_event +
+                " GROUP BY event_name").closeableIterator();
     }
 
     public Event getLastAction(int type_action) throws SQLException {

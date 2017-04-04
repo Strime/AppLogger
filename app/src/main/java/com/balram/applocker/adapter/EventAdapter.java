@@ -15,6 +15,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.balram.applocker.R;
+import com.balram.applocker.interfaces.ToolChangedListener;
 import com.balram.applocker.tools.Tools;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
@@ -144,7 +145,7 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
 
     @Override
     public EventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_layout, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_app_layout, parent, false);
         EventViewHolder evh = new EventViewHolder(v, this);
         return evh;
     }
@@ -158,7 +159,13 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
     public void onBindViewHolder(EventViewHolder viewHolder, Cursor cursor) {
         viewHolder.updateUI();
         if(viewHolder.isPie) {
-            ArrayList<PieEntry> entries = viewHolder.isShownByDuration ? Tools.getEntriesFromCursorTime(cursor) : Tools.getEntriesFromCursorOcc(cursor);
+
+            ArrayList<PieEntry> entries = new ArrayList<>();
+            if(viewHolder.isShownByDuration) {
+                Tools.getEntriesFromCursorTime(cursor, entries);
+            } else {
+                Tools.getEntriesFromCursorOcc(cursor, entries);
+            }
             PieDataSet dataSet = new PieDataSet(entries, "");
 
             Tools.configureDataSet(dataSet);
@@ -180,7 +187,7 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
             ArrayList<String> labels = new ArrayList<>();
             ArrayList<BarEntry> entries = new ArrayList<>();
             if(viewHolder.isShownByDuration) {
-                Tools.getEntriesFromCursorTime(labels,entries, cursor);
+                Tools.getEntriesFromCursorTime(labels, entries, cursor);
             } else {
                 Tools.getEntriesFromCursorOcc(labels, entries, cursor);
             }
@@ -190,10 +197,12 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
             BarData data = new BarData(dataSet);
             data.setValueFormatter(new DefaultValueFormatter(0));
             data.setValueTextSize(11f);
+
             data.setValueTextColor(Color.BLACK);
 
             viewHolder.barChart.setData(data);
             viewHolder.barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
+            viewHolder.barChart.getXAxis().setLabelCount(labels.size());
 
             // undo all highlights
             viewHolder.barChart.highlightValues(null);
@@ -212,8 +221,4 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
         viewHolder.durationTextView.setText(String.format("%s (%s)",startAt,duration));*/
     }
 
-
-    public interface ToolChangedListener {
-        public void onToolChanged(boolean isShownByDuration);
-    }
 }
