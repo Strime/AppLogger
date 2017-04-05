@@ -17,11 +17,11 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -36,16 +36,12 @@ import com.strime.applogger.database.sqlHelper;
 import com.strime.applogger.interfaces.ToolChangedListener;
 import com.strime.applogger.model.Event;
 import com.strime.applogger.service.ListenningService;
-import com.strime.applogger.service.NotificationService;
-import com.github.florent37.expectanim.ExpectAnim;
 import com.j256.ormlite.android.AndroidDatabaseResults;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.CloseableIterator;
 
 import java.sql.SQLException;
 
-import static com.github.florent37.expectanim.core.Expectations.bottomOfParent;
-import static com.github.florent37.expectanim.core.Expectations.leftOfParent;
 import static com.github.florent37.expectanim.core.Expectations.width;
 
 
@@ -68,6 +64,10 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
     private RecyclerView appRecycler;
     private RecyclerView notifRecycler;
 
+    //NESTED
+    private NestedScrollView nestedRecord;
+    private NestedScrollView nestedResult;
+
     //SQL
     private sqlHelper mHelper;
 
@@ -76,12 +76,10 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
     private CardView cardViewRecord;
     private SeekBar lvlRecordSlider;
     private TextView tvExplanation;
-    //private BottomSheetBehavior bottomSheetBehavior;
-    private View llBottomSheet;
-
+    private FloatingActionButton fab;
+    //private View llBottomSheet;
 
     private int confValue;
-    private NotificationService notificationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,9 +87,10 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
 
         setContentView(R.layout.activity_main);
 
+        //startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
         //showPhoneStatePermission();
 
-        /*fab = (FloatingActionButton) findViewById(R.id.flaottingButton);
+        /*
         llBottomSheet = findViewById(R.id.bottom_sheet);// init the bottom sheet behavior
         bottomSheetBehavior = BottomSheetBehavior.from(llBottomSheet);
         llBottomSheet.setOnClickListener(new View.OnClickListener() {
@@ -120,17 +119,21 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
             @Override
             public void onSlide(@NonNull final View bottomSheet, float slideOffset) {}
         });
-        
-
+        */
+        fab = (FloatingActionButton) findViewById(R.id.flaottingButton);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showListeningView();
                 updateUI();
             }
-        });*/
+        });
 
         OpenHelperManager.setHelper(new sqlHelper(MainActivity.this));
+
+
+        nestedRecord = (NestedScrollView) findViewById(R.id.nestedRecord);
+        nestedResult = (NestedScrollView) findViewById(R.id.nestedResult);
         /**
          * APP RECYCLER
          */
@@ -152,9 +155,8 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         updateExplanation(0);
 
         lvlRecordSlider = (SeekBar) findViewById(R.id.seekBarLvl);
-        /*new ExpectAnim().expect(lvlRecordSlider).toBe(bottomOfParent().withMarginDp(16),
-                leftOfParent().withMarginDp(16),
-                width(40).toDp().keepRatio()).toAnimation().setNow();*/
+
+
 
         lvlRecordSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -253,24 +255,29 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
             intent.putExtra(ListenningService.action, ListenningService.ACTIONS.STARTRECORDING);
             startService(intent);
 
+
             try {
                 CloseableIterator<String[]> iterator = getHelper().getEventIteratorTime(Event.APPLICATION);
-                AndroidDatabaseResults r = (AndroidDatabaseResults) iterator.getRawResults();
-                mAppAdapter = new EventAdapter(MainActivity.this, r.getRawCursor(), this);
+                AndroidDatabaseResults appResults = (AndroidDatabaseResults) iterator.getRawResults();
+                mAppAdapter = new EventAdapter(MainActivity.this, appResults.getRawCursor(), this);
 
 
-                CloseableIterator<String[]> notifIte = getHelper().getNotifIterator();
+                CloseableIterator<Event> notifIte = getHelper().getNotifIterator();
                 AndroidDatabaseResults notifResults = (AndroidDatabaseResults) notifIte.getRawResults();
                 mNotifAdapter = new EventNotifAdapter(MainActivity.this, notifResults.getRawCursor(), this);
 
-                if(r.getRawCursor().getCount() > 0) {
+                if(appResults.getRawCursor().getCount() > 0) {
                     appRecycler.setAdapter(mAppAdapter);
                     notifRecycler.setAdapter(mNotifAdapter);
-                    //TODO : CHECK IF THERE IS DATA OR NOT
                     cardViewRecord.setVisibility(View.GONE);
                     appRecycler.setVisibility(View.VISIBLE);
                     notifRecycler.setVisibility(View.VISIBLE);
                 }
+                /*if(notifResults.getRawCursor().getCount() > 0) {
+                    notifRecycler.setAdapter(mNotifAdapter);
+                    cardViewRecord.setVisibility(View.GONE);
+                    notifRecycler.setVisibility(View.VISIBLE);
+                }*/
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -295,10 +302,15 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
     @Override
     protected void onResume() {
         super.onResume();
+        if(isMyServiceRunning(ListenningService.class)) {
+            showListeningView();
+        }
+
         if(receiver!=null){
             registerReceiver(receiver, new IntentFilter(
                     ListenningService.APPFIND));
         }
+
     }
 
     @Override
@@ -346,8 +358,13 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         }
         if(isMyServiceRunning(ListenningService.class)) {
             //fab.setImageResource(R.mipmap.stop);
+            nestedRecord.setVisibility(View.GONE);
+            nestedResult.setVisibility(View.VISIBLE);
+
         } else {
             //fab.setImageResource(R.mipmap.record);
+            nestedRecord.setVisibility(View.VISIBLE);
+            nestedResult.setVisibility(View.GONE);
         }
 
     }
@@ -384,16 +401,18 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         }*/
     }
 
-    private void listCurrentNotification() {
-        String result = "";
-        if (isNotificationListenerEnabled()) {
-            if (NotificationService.getCurrentNotifications() == null) {
-                return;
+    @Override
+    public void animateClock(final EventNotifAdapter.EventViewHolder evh, final Integer h, final Integer m) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                evh.getClockImageView().animateToTime(h, m);
+                evh.getTvTime().setText(String.format("%d:%d",h, m));
             }
-            int n = NotificationService.mCurrentNotificationsCounts;
-            Log.d("WTDFFFF","dqssdqs : "+n);
-        }
+        });
     }
+
+
     private boolean isNotificationListenerEnabled() {
         String pkgName = getPackageName();
         final String flat = Settings.Secure.getString(getContentResolver(),

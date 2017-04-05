@@ -33,9 +33,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-import rm.com.clocks.ClockDrawable;
-import rm.com.clocks.Stroke;
-
 /**
  * Created by GSA13442 on 28/02/2017.
  */
@@ -87,7 +84,7 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
             fabTools.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    isShownByDuration = !isShownByDuration;
+                    //isShownByDuration = !isShownByDuration;
                     parent.onToolChanged(isShownByDuration);
                 }
             });
@@ -112,36 +109,6 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
     private void onToolChanged(boolean isShownByDuration) {
         this.listener.onToolChanged(isShownByDuration);
     }
-
-    public void setClock(ImageView iv, Timestamp start, Timestamp end, long duration) {
-
-        Calendar startCal = Calendar.getInstance();
-        startCal.setTimeZone(TimeZone.getDefault());
-        startCal.setTimeInMillis(start.getTime());
-        Calendar endCal = Calendar.getInstance();
-        endCal.setTimeZone(TimeZone.getDefault());
-        endCal.setTimeInMillis(end.getTime());
-
-
-        ClockDrawable clock = ClockDrawable.builder(ctx)
-                .hours(startCal.get(Calendar.HOUR_OF_DAY))                 // initial time hours
-                .minutes(startCal.get(Calendar.MINUTE))                    // initial time minutes
-                .withColor(Color.DKGRAY)                                    // set icon color
-                .withFrameWidth(Stroke.REGULAR)                             // set frame width
-                .withPointerWidth(Stroke.THIN)                              // set pointer width
-                .withDuration(200L*1+duration)                                         // set animation duration in millis (600L by default)
-                .withInterpolator(new DecelerateInterpolator())             // set animation interpolator (default is OverShootInterpolator)
-                .into(iv);                                                  // attach the Drawable you built to ImageView and returns Drawable
-    }
-
-    public String getCorrectTime(Calendar c, int type) {
-        return formatTime(c.get(type));
-    }
-
-    public String formatTime(int time) {
-        return time < 10 ? "0"+time:""+time;
-    }
-
 
     @Override
     public EventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -214,11 +181,6 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
 
 
         viewHolder.titleCardView.setText("Navigation into applications");
-
-        /*setClock(viewHolder.clock, ts_begin, ts_end, d);
-
-        viewHolder.appNameTextView.setText(cursor.getString(cursor.getColumnIndexOrThrow("event_name")));
-        viewHolder.durationTextView.setText(String.format("%s (%s)",startAt,duration));*/
     }
 
 }

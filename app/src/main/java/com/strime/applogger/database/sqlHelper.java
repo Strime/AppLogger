@@ -68,9 +68,8 @@ public class sqlHelper extends OrmLiteSqliteOpenHelper {
                 " GROUP BY event_name").closeableIterator();
     }
 
-    public CloseableIterator<String[]> getNotifIterator() throws SQLException {
-        return getEventDao().queryRaw("SELECT inserted_time, end_time, event_name, _id" +
-                " FROM app_event where type_event = " + Event.ACTION_NOTIFICATION).closeableIterator();
+    public CloseableIterator<Event> getNotifIterator() throws SQLException {
+        return getEventDao().queryBuilder().iterator();
     }
     public Event getLastAction(int type_action) throws SQLException {
         final Dao<Event, Integer> eventDao = getEventDao();
