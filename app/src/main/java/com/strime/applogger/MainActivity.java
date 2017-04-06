@@ -12,74 +12,51 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.SQLException;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.widget.NestedScrollView;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.view.View;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.balram.locker.utils.Locker;
 import com.balram.locker.view.AppLocker;
 import com.balram.locker.view.LockActivity;
-import com.strime.applogger.adapter.EventAdapter;
+import com.j256.ormlite.android.AndroidDatabaseResults;
+import com.j256.ormlite.dao.CloseableIterator;
 import com.strime.applogger.adapter.EventNotifAdapter;
+import com.strime.applogger.cards.AppCard;
+import com.strime.applogger.cards.RecordCard;
 import com.strime.applogger.database.sqlHelper;
-import com.strime.applogger.interfaces.ToolChangedListener;
+import com.strime.applogger.interfaces.ManagerListener;
 import com.strime.applogger.model.Event;
 import com.strime.applogger.service.ListenningService;
-import com.j256.ormlite.android.AndroidDatabaseResults;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
-import com.j256.ormlite.dao.CloseableIterator;
-
-import java.sql.SQLException;
 
 import static com.github.florent37.expectanim.core.Expectations.width;
 
 
-public class MainActivity extends LockActivity implements ToolChangedListener {
+public class MainActivity extends LockActivity implements ManagerListener {
 
     /**
      * CONF VALUES
      */
-    private static final int LOW = 0;
-    private static final int MEDIUM = 1;
-    private static final int PRO = 2;
-    private static final int ULTRA = 3;
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
 
     //private FloatingActionButton fab;
-    private EventAdapter mAppAdapter;
-    private EventNotifAdapter mNotifAdapter;
+    /*private EventAdapter mAppAdapter;
+    private EventNotifAdapter mNotifAdapter;*/
 
     //RECYCLERS
-    private RecyclerView appRecycler;
-    private RecyclerView notifRecycler;
-
-    //NESTED
-    private NestedScrollView nestedRecord;
-    private NestedScrollView nestedResult;
+    private AppCard appCard;
+    private RecordCard recordCard;
 
     //SQL
     private sqlHelper mHelper;
 
     private BroadcastReceiver receiver;
 
-    private CardView cardViewRecord;
-    private SeekBar lvlRecordSlider;
-    private TextView tvExplanation;
-    private FloatingActionButton fab;
-    //private View llBottomSheet;
-
-    private int confValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,10 +65,8 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         setContentView(R.layout.activity_main);
 
         //startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
-        //showPhoneStatePermission();
 
-        /*
-        llBottomSheet = findViewById(R.id.bottom_sheet);// init the bottom sheet behavior
+        /*llBottomSheet = findViewById(R.id.bottom_sheet);// init the bottom sheet behavior
         bottomSheetBehavior = BottomSheetBehavior.from(llBottomSheet);
         llBottomSheet.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,83 +95,28 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
             public void onSlide(@NonNull final View bottomSheet, float slideOffset) {}
         });
         */
-        fab = (FloatingActionButton) findViewById(R.id.flaottingButton);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showListeningView();
-                updateUI();
-            }
-        });
 
         OpenHelperManager.setHelper(new sqlHelper(MainActivity.this));
 
-
-        nestedRecord = (NestedScrollView) findViewById(R.id.nestedRecord);
-        nestedResult = (NestedScrollView) findViewById(R.id.nestedResult);
         /**
-         * APP RECYCLER
+         * CARDS
          */
-        appRecycler = (RecyclerView) findViewById(R.id.event_app_recycler);
-        LinearLayoutManager llm = new LinearLayoutManager(this);
-        appRecycler.setLayoutManager(llm);
+        appCard = (AppCard) findViewById(R.id.event_app_card);
 
+        recordCard = (RecordCard) findViewById(R.id.record_card);
+        recordCard.setManagerListener(this);
 
         /**
          * NOTIF RECYCLER
          */
-        notifRecycler = (RecyclerView) findViewById(R.id.event_notif_recycler);
-        LinearLayoutManager llm_notif = new LinearLayoutManager(this);
-        notifRecycler.setLayoutManager(llm_notif);
+        /*notifLayout = (RelativeLayout) findViewById(R.id.event_notif_recycler);
 
+        cardViewRecord = (CardView) findViewById(R.id.layoutRecord);*/
 
-        cardViewRecord = (CardView) findViewById(R.id.layoutRecord);
-        tvExplanation = (TextView) findViewById(R.id.lvl_slider_explanation);
-        updateExplanation(0);
-
-        lvlRecordSlider = (SeekBar) findViewById(R.id.seekBarLvl);
-
-
-
-        lvlRecordSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                updateExplanation(progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
 
         updateUI();
     }
 
-    private void updateExplanation(int index) {
-        confValue = index;
-        String txt="";
-        switch (index) {
-            case LOW:
-                txt = "Will only record app navigation.";
-                break;
-            case MEDIUM:
-                txt = "Allowed to record notification(s).";
-                break;
-            case PRO:
-                txt = "Notification(s) + event(s).";
-                break;
-            case ULTRA:
-                txt = "Notification(s) + event(s) + GPS position each 10 minutes.";
-                break;
-        }
-        tvExplanation.setText(txt);
-    }
 
 
     private boolean showNotificationPermission() {
@@ -251,53 +171,43 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
     private void showListeningView() {
         if(showPhoneStatePermission() && showNotificationPermission()) {
             Intent intent = new Intent(getApplication(), ListenningService.class);
-            intent.putExtra(ListenningService.conf, confValue);
+            intent.putExtra(ListenningService.conf, recordCard.getConfValue());
             intent.putExtra(ListenningService.action, ListenningService.ACTIONS.STARTRECORDING);
             startService(intent);
 
+            /*try {
+                appCard.refreshAdapter(getHelper());
+            } catch (java.sql.SQLException e) {
+                e.printStackTrace();
+            }*/
 
-            try {
-                CloseableIterator<String[]> iterator = getHelper().getEventIteratorTime(Event.APPLICATION);
-                AndroidDatabaseResults appResults = (AndroidDatabaseResults) iterator.getRawResults();
-                mAppAdapter = new EventAdapter(MainActivity.this, appResults.getRawCursor(), this);
-
-
-                CloseableIterator<Event> notifIte = getHelper().getNotifIterator();
-                AndroidDatabaseResults notifResults = (AndroidDatabaseResults) notifIte.getRawResults();
-                mNotifAdapter = new EventNotifAdapter(MainActivity.this, notifResults.getRawCursor(), this);
-
-                if(appResults.getRawCursor().getCount() > 0) {
-                    appRecycler.setAdapter(mAppAdapter);
-                    notifRecycler.setAdapter(mNotifAdapter);
-                    cardViewRecord.setVisibility(View.GONE);
-                    appRecycler.setVisibility(View.VISIBLE);
-                    notifRecycler.setVisibility(View.VISIBLE);
-                }
-                /*if(notifResults.getRawCursor().getCount() > 0) {
+               /* if(appResults.getRawCursor().getCount() > 0) {
+                    appCard.setAdapter(mAppAdapter);
+                    //notifLayout.setAdapter(mNotifAdapter);
+                    //notifLayout.setVisibility(View.VISIBLE);
+                }*/
+               /* if(notifResults.getRawCursor().getCount() > 0) {
                     notifRecycler.setAdapter(mNotifAdapter);
                     cardViewRecord.setVisibility(View.GONE);
                     notifRecycler.setVisibility(View.VISIBLE);
                 }*/
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
 
             receiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    mAppAdapter.notifyDataSetChanged();
+                    //mAppAdapter.notifyDataSetChanged();
                 }
             };
             registerReceiver(receiver, new IntentFilter(ListenningService.APPFIND));
         }
     }
 
-    public sqlHelper getHelper() {
+   /* public sqlHelper getHelper() {
         if(mHelper == null){
             mHelper = OpenHelperManager.getHelper(MainActivity.this, sqlHelper.class);
         }
         return mHelper;
-    }
+    }*/
 
     @Override
     protected void onResume() {
@@ -307,8 +217,7 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         }
 
         if(receiver!=null){
-            registerReceiver(receiver, new IntentFilter(
-                    ListenningService.APPFIND));
+            registerReceiver(receiver, new IntentFilter(ListenningService.APPFIND));
         }
 
     }
@@ -357,14 +266,18 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
             startActivityForResult(intent, type);
         }
         if(isMyServiceRunning(ListenningService.class)) {
-            //fab.setImageResource(R.mipmap.stop);
-            nestedRecord.setVisibility(View.GONE);
-            nestedResult.setVisibility(View.VISIBLE);
+            appCard.updateUI(true);
+            recordCard.updateUI(true);
+            //
+            /*nestedRecord.setVisibility(View.GONE);
+            nestedResult.setVisibility(View.VISIBLE);*/
 
         } else {
+            recordCard.updateUI(false);
+            appCard.updateUI(false);
             //fab.setImageResource(R.mipmap.record);
-            nestedRecord.setVisibility(View.VISIBLE);
-            nestedResult.setVisibility(View.GONE);
+            /*nestedRecord.setVisibility(View.VISIBLE);
+            nestedResult.setVisibility(View.GONE);*/
         }
 
     }
@@ -379,7 +292,6 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         return false;
     }
 
-    @Override
     public void onToolChanged(boolean isShownByDuration) {
         Notification n  = new Notification.Builder(this)
                 .setContentTitle("New mail from " + "test@gmail.com")
@@ -390,18 +302,8 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         notificationManager.notify(0, n);
-
-        /*try {
-            //TERNAIRE EN FONCTION DU BOOLEAN
-            CloseableIterator<String[]> iterator = isShownByDuration ? getHelper().getEventIteratorTime(Event.APPLICATION) : getHelper().getEventIteratorOcc(Event.APPLICATION);
-            AndroidDatabaseResults r = (AndroidDatabaseResults) iterator.getRawResults();
-            mAppAdapter.swapCursor(r.getRawCursor());
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }*/
     }
 
-    @Override
     public void animateClock(final EventNotifAdapter.EventViewHolder evh, final Integer h, final Integer m) {
         runOnUiThread(new Runnable() {
             @Override
@@ -431,6 +333,10 @@ public class MainActivity extends LockActivity implements ToolChangedListener {
         return false;
     }
 
-
+    @Override
+    public void startService() {
+        showListeningView();
+        updateUI();
+    }
 
 }

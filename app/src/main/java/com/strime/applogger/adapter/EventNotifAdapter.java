@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.strime.applogger.R;
-import com.strime.applogger.interfaces.ToolChangedListener;
 import com.strime.applogger.model.Event;
 import com.strime.applogger.model.Horaire;
 import com.strime.applogger.stub.StubSql;
@@ -20,7 +19,6 @@ import com.strime.applogger.stub.StubSql;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Timer;
 import java.util.TimerTask;
 
 import rm.com.clocks.ClockDrawable;
@@ -37,14 +35,12 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
 
     private final ArrayList<Event> temp;
     private final Context ctx;
-    private ToolChangedListener listener;
 
     private static ArrayList<Horaire> horaires = new ArrayList<>();
 
-    public EventNotifAdapter(Context context, Cursor cursor, ToolChangedListener l) {
+    public EventNotifAdapter(Context context, Cursor cursor) {
         super(context, cursor);
         this.ctx = context;
-        this.listener = l;
         temp = StubSql.getStubNotifEvent();
         for (Event e : temp) {
             horaires.addAll(e.getsHoraires());
@@ -60,6 +56,8 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
         ClockImageView clock;
         TextView tvTime;
 
+        private final Context appCtx;
+
         EventNotifAdapter parent;
 
         public ClockImageView getClockImageView() {
@@ -69,8 +67,9 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
             return tvTime;
         }
 
-        EventViewHolder(View view, final EventNotifAdapter p) {
+        EventViewHolder(View view, Context appCtx, final EventNotifAdapter p) {
             super(view);
+            this.appCtx = appCtx;
             parent = p;
             cv = (CardView) view.findViewById(R.id.cardview);
             cv.setOnClickListener(new View.OnClickListener() {
@@ -84,7 +83,7 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
 
             tvTime = (TextView) view.findViewById(R.id.textViewTime);
             rvNotif = (RecyclerView) view.findViewById(R.id.rvNotif);
-            LinearLayoutManager llm_notif = new LinearLayoutManager(view.getContext());
+            LinearLayoutManager llm_notif = new LinearLayoutManager(appCtx);
             rvNotif.setLayoutManager(llm_notif);
             notificationAdapter = new NotificationAdapter(horaires);
             rvNotif.setAdapter(notificationAdapter);
@@ -113,8 +112,8 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
 
     @Override
     public EventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_notif_layout, parent, false);
-        EventViewHolder evh = new EventViewHolder(v, this);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.notif_card_layout, parent, false);
+        EventViewHolder evh = new EventViewHolder(v, ctx, this);
         return evh;
     }
 
@@ -140,7 +139,7 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
        /* final Timer t = new Timer();
         t.schedule(new MyTimerTask(viewHolder), refresh_int, refresh_int);*/
         Horaire h = horaires.remove(0);
-        listener.animateClock(viewHolder, h.hour,h.minute);
+        //listener.animateClock(viewHolder, h.hour,h.minute);
     }
     private class MyTimerTask extends TimerTask {
         private final EventViewHolder viewHolder;
@@ -153,7 +152,7 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
         public void run() {
             if(!horaires.isEmpty()) {
                 Horaire h = horaires.remove(0);
-                listener.animateClock(viewHolder, h.hour,h.minute);
+               // listener.animateClock(viewHolder, h.hour,h.minute);
             }
         }
     }

@@ -3,19 +3,13 @@ package com.strime.applogger.adapter;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.strime.applogger.R;
-import com.strime.applogger.interfaces.ToolChangedListener;
+import com.strime.applogger.cards.AppCard;
 import com.strime.applogger.tools.Tools;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
@@ -28,10 +22,7 @@ import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.DefaultValueFormatter;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.TimeZone;
 
 /**
  * Created by GSA13442 on 28/02/2017.
@@ -39,20 +30,33 @@ import java.util.TimeZone;
 
 public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventViewHolder> {
     private Context ctx;
-    private ToolChangedListener listener;
-    public EventAdapter(Context context, Cursor cursor, ToolChangedListener l) {
+    private boolean isPie = true;
+    private boolean isShownByDuration = true;
+
+    public EventAdapter(Context context, Cursor cursor) {
         super(context, cursor);
         this.ctx = context;
-        this.listener = l;
+    }
+
+    public boolean isShownByDuration() {
+        return isShownByDuration;
+    }
+
+    public void setShownByDuration(boolean shownByDuration) {
+        isShownByDuration = shownByDuration;
+    }
+
+    public boolean isPie() {
+        return isPie;
+    }
+
+    public void setPie(boolean pie) {
+        isPie = pie;
     }
 
     public static class EventViewHolder extends RecyclerView.ViewHolder {
-        CardView cv;
         PieChart pieChart;
         BarChart barChart;
-        TextView titleCardView;
-        TextView textExplanation;
-        FloatingActionButton fabTools;
 
         EventAdapter parent;
 
@@ -62,35 +66,13 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
         EventViewHolder(View view, final EventAdapter p) {
             super(view);
             parent = p;
-            cv = (CardView) view.findViewById(R.id.cardview);
-            cv.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    isPie = !isPie;
-                    parent.notifyDataSetChanged();
-                }
-            });
+
             pieChart = (PieChart) view.findViewById(R.id.pie_chart);
             barChart = (BarChart) view.findViewById(R.id.bar_chart);
-
-            titleCardView = (TextView) view.findViewById(R.id.title_card);
-            textExplanation = (TextView) view.findViewById(R.id.text_explanation);
 
             pieChart = Tools.configurePieChart(pieChart);
             barChart = Tools.configureBarChart(barChart);
 
-            fabTools = (FloatingActionButton) view.findViewById(R.id.fabTools);
-            fabTools.setEnabled(true);
-            fabTools.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //isShownByDuration = !isShownByDuration;
-                    parent.onToolChanged(isShownByDuration);
-                }
-            });
-
-            isPie = true;
-            isShownByDuration = true;
 
             updateUI();
         }
@@ -99,20 +81,16 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
             pieChart.setVisibility(isPie?View.VISIBLE:View.GONE);
             barChart.setVisibility(isPie?View.GONE:View.VISIBLE);
 
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textExplanation.getLayoutParams();
+            /*RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textExplanation.getLayoutParams();
             params.addRule(RelativeLayout.BELOW, isPie ? R.id.pie_chart : R.id.bar_chart);
-            textExplanation.setText(isShownByDuration ? "Time in second spend on each applications" : "Number of time you opened each applications");
+            textExplanation.setText(isShownByDuration ? "Time in second spend on each applications" : "Number of time you opened each applications");*/
 
         }
     }
 
-    private void onToolChanged(boolean isShownByDuration) {
-        this.listener.onToolChanged(isShownByDuration);
-    }
-
     @Override
     public EventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_app_layout, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.chart_layout, parent, false);
         EventViewHolder evh = new EventViewHolder(v, this);
         return evh;
     }
@@ -125,10 +103,10 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
     @Override
     public void onBindViewHolder(EventViewHolder viewHolder, Cursor cursor) {
         viewHolder.updateUI();
-        if(viewHolder.isPie) {
+        if(isPie) {
 
             ArrayList<PieEntry> entries = new ArrayList<>();
-            if(viewHolder.isShownByDuration) {
+            if(isShownByDuration) {
                 Tools.getEntriesFromCursorTime(cursor, entries);
             } else {
                 Tools.getEntriesFromCursorOcc(cursor, entries);
@@ -153,7 +131,7 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
         } else {
             ArrayList<String> labels = new ArrayList<>();
             ArrayList<BarEntry> entries = new ArrayList<>();
-            if(viewHolder.isShownByDuration) {
+            if(isShownByDuration) {
                 Tools.getEntriesFromCursorTime(labels, entries, cursor);
             } else {
                 Tools.getEntriesFromCursorOcc(labels, entries, cursor);
@@ -180,7 +158,9 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
         }
 
 
-        viewHolder.titleCardView.setText("Navigation into applications");
+        //viewHolder.titleCardView.setText("Navigation into applications");
     }
+
+
 
 }

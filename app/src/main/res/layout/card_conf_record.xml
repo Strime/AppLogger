@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <RelativeLayout
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+        <android.support.v4.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:layout_alignParentTop="true"
+            android:id="@+id/recordCard"
+            android:layout_alignParentBottom="true">
+
+            <android.support.v7.widget.CardView
+                android:id="@+id/layoutRecord"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                app:cardElevation="8dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="309dp"
+                    android:layout_marginTop="20dp"
+                    android:padding="5dp">
+
+                    <TextView
+                        android:id="@+id/tv_record_tittle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentTop="true"
+                        android:layout_marginLeft="30dp"
+                        android:layout_marginRight="30dp"
+                        android:text="Choose your level"
+                        android:textAppearance="@android:style/TextAppearance.DialogWindowTitle" />
+
+                    <SeekBar
+                        android:id="@+id/seekBarLvl"
+                        style="@style/Widget.AppCompat.SeekBar.Discrete"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignEnd="@+id/lvl_slider_explanation"
+                        android:layout_alignStart="@+id/lvl_slider_explanation"
+                        android:layout_below="@+id/tv_record_tittle"
+                        android:layout_margin="15dp"
+                        android:max="3"
+                        android:progress="0"
+                        android:progressTint="@color/accent"
+                        android:thumbTint="@color/accent" />
+
+                    <TextView
+                        android:id="@+id/lvl_slider_explanation"
+                        android:layout_width="match_parent"
+                        android:layout_height="75dp"
+                        android:layout_below="@id/seekBarLvl"
+                        android:layout_margin="10dp"
+                        android:layout_weight="1"
+                        android:background="@color/rc_card_gray_light"
+                        android:elevation="7dp"
+                        android:padding="10dp"
+                        android:text="TextView" />
+                    <android.support.design.widget.FloatingActionButton
+                        android:id="@+id/flaottingButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@mipmap/record"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+
+            </android.support.v7.widget.CardView>
+        </android.support.v4.widget.NestedScrollView>
+    </RelativeLayout>
+</merge>

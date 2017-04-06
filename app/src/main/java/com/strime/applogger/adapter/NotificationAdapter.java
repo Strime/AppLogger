@@ -7,15 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.github.florent37.expectanim.ExpectAnim;
 import com.strime.applogger.R;
 import com.strime.applogger.model.Horaire;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
-
-import static com.github.florent37.expectanim.core.Expectations.alpha;
 
 /**
  * Created by gsa13442 on 05/04/2017.
@@ -69,7 +64,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
         public NotifViewHolder(View itemView) {
             super(itemView);
-            tvTitle = (TextView) itemView.findViewById(R.id.title_card);
+            tvTitle = (TextView) itemView.findViewById(R.id.title_card_app);
         }
     }
 }
