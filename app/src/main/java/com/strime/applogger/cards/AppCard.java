@@ -94,7 +94,6 @@ public class AppCard extends RelativeLayout  {
     }
 
     public void refreshAdapter() throws SQLException {
-        boolean isShownByDuration = false;
         if(mAppAdapter == null) {
             CloseableIterator<String[]> iterator = getHelper().getEventIteratorTime(Event.APPLICATION);
             AndroidDatabaseResults appResults = (AndroidDatabaseResults) iterator.getRawResults();
@@ -103,7 +102,7 @@ public class AppCard extends RelativeLayout  {
             //mAppAdapter.notifyDataSetChanged();
         }
         else {
-            CloseableIterator<String[]> iterator = isShownByDuration ? getHelper().getEventIteratorTime(Event.APPLICATION) : getHelper().getEventIteratorOcc(Event.APPLICATION);
+            CloseableIterator<String[]> iterator = mAppAdapter.isShownByDuration() ? getHelper().getEventIteratorTime(Event.APPLICATION) : getHelper().getEventIteratorOcc(Event.APPLICATION);
             AndroidDatabaseResults r = (AndroidDatabaseResults) iterator.getRawResults();
             mAppAdapter.swapCursor(r.getRawCursor());
             mAppAdapter.notifyDataSetChanged();

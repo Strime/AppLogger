@@ -173,7 +173,6 @@ public class Tools {
             long begin = cursor.getInt(cursor.getColumnIndexOrThrow("totalInsert"));
             long end = cursor.getInt(cursor.getColumnIndexOrThrow("totalEnd"));
             long duration = TimeUnit.MILLISECONDS.toSeconds(end - begin);
-
             String appName = cursor.getString(cursor.getColumnIndex("event_name"));
             unsortMap.put(appName, duration);
 

@@ -60,9 +60,6 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
 
         EventAdapter parent;
 
-        boolean isPie;
-        boolean isShownByDuration;
-
         EventViewHolder(View view, final EventAdapter p) {
             super(view);
             parent = p;
@@ -78,8 +75,8 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
         }
 
         void updateUI() {
-            pieChart.setVisibility(isPie?View.VISIBLE:View.GONE);
-            barChart.setVisibility(isPie?View.GONE:View.VISIBLE);
+            pieChart.setVisibility(parent.isPie()?View.VISIBLE:View.GONE);
+            barChart.setVisibility(parent.isPie()?View.GONE:View.VISIBLE);
 
             /*RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textExplanation.getLayoutParams();
             params.addRule(RelativeLayout.BELOW, isPie ? R.id.pie_chart : R.id.bar_chart);
