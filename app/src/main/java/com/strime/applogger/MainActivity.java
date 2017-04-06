@@ -12,29 +12,25 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.SQLException;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
+import android.support.v4.widget.NestedScrollView;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.Toast;
 
 import com.balram.locker.utils.Locker;
 import com.balram.locker.view.AppLocker;
 import com.balram.locker.view.LockActivity;
-import com.j256.ormlite.android.AndroidDatabaseResults;
-import com.j256.ormlite.dao.CloseableIterator;
-import com.strime.applogger.adapter.EventNotifAdapter;
+import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.strime.applogger.cards.AppCard;
+import com.strime.applogger.cards.NotifCard;
 import com.strime.applogger.cards.RecordCard;
 import com.strime.applogger.database.sqlHelper;
 import com.strime.applogger.interfaces.ManagerListener;
-import com.strime.applogger.model.Event;
 import com.strime.applogger.service.ListenningService;
-import com.j256.ormlite.android.apptools.OpenHelperManager;
-
-import static com.github.florent37.expectanim.core.Expectations.width;
 
 
 public class MainActivity extends LockActivity implements ManagerListener {
@@ -45,16 +41,17 @@ public class MainActivity extends LockActivity implements ManagerListener {
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
 
     //private FloatingActionButton fab;
-    /*private EventAdapter mAppAdapter;
-    private EventNotifAdapter mNotifAdapter;*/
+    /*private AppEventAdapter mAppAdapter;
+    private NotifEventAdapter mNotifAdapter;*/
 
     //RECYCLERS
     private AppCard appCard;
     private RecordCard recordCard;
+    private NotifCard notifCard;
+
+    private NestedScrollView scrollView;
 
     //SQL
-    private sqlHelper mHelper;
-
     private BroadcastReceiver receiver;
 
 
@@ -102,6 +99,8 @@ public class MainActivity extends LockActivity implements ManagerListener {
          * CARDS
          */
         appCard = (AppCard) findViewById(R.id.event_app_card);
+        notifCard = (NotifCard) findViewById(R.id.notif_card);
+        scrollView = (NestedScrollView) findViewById(R.id.scrollView);
 
         recordCard = (RecordCard) findViewById(R.id.record_card);
         recordCard.setManagerListener(this);
@@ -175,22 +174,17 @@ public class MainActivity extends LockActivity implements ManagerListener {
             intent.putExtra(ListenningService.action, ListenningService.ACTIONS.STARTRECORDING);
             startService(intent);
 
-            /*try {
-                appCard.refreshAdapter(getHelper());
-            } catch (java.sql.SQLException e) {
-                e.printStackTrace();
-            }*/
 
-               /* if(appResults.getRawCursor().getCount() > 0) {
-                    appCard.setAdapter(mAppAdapter);
-                    //notifLayout.setAdapter(mNotifAdapter);
-                    //notifLayout.setVisibility(View.VISIBLE);
-                }*/
-               /* if(notifResults.getRawCursor().getCount() > 0) {
-                    notifRecycler.setAdapter(mNotifAdapter);
-                    cardViewRecord.setVisibility(View.GONE);
-                    notifRecycler.setVisibility(View.VISIBLE);
-                }*/
+           /* if(appResults.getRawCursor().getCount() > 0) {
+                appCard.setAdapter(mAppAdapter);
+                //notifLayout.setAdapter(mNotifAdapter);
+                //notifLayout.setVisibility(View.VISIBLE);
+            }*/
+           /* if(notifResults.getRawCursor().getCount() > 0) {
+                notifRecycler.setAdapter(mNotifAdapter);
+                cardViewRecord.setVisibility(View.GONE);
+                notifRecycler.setVisibility(View.VISIBLE);
+            }*/
 
             receiver = new BroadcastReceiver() {
                 @Override
@@ -231,15 +225,6 @@ public class MainActivity extends LockActivity implements ManagerListener {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if(mHelper!=null) {
-            OpenHelperManager.releaseHelper();
-            mHelper = null;
-        }
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
@@ -265,21 +250,12 @@ public class MainActivity extends LockActivity implements ManagerListener {
             intent.putExtra(Locker.TYPE, type);
             startActivityForResult(intent, type);
         }
-        if(isMyServiceRunning(ListenningService.class)) {
-            appCard.updateUI(true);
-            recordCard.updateUI(true);
-            //
-            /*nestedRecord.setVisibility(View.GONE);
-            nestedResult.setVisibility(View.VISIBLE);*/
+        boolean service_running = isMyServiceRunning(ListenningService.class);
 
-        } else {
-            recordCard.updateUI(false);
-            appCard.updateUI(false);
-            //fab.setImageResource(R.mipmap.record);
-            /*nestedRecord.setVisibility(View.VISIBLE);
-            nestedResult.setVisibility(View.GONE);*/
-        }
-
+        appCard.updateUI(service_running);
+        notifCard.updateUI(service_running);
+        recordCard.updateUI(service_running);
+        scrollView.setVisibility(service_running ? View.VISIBLE : View.GONE);
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -304,15 +280,7 @@ public class MainActivity extends LockActivity implements ManagerListener {
         notificationManager.notify(0, n);
     }
 
-    public void animateClock(final EventNotifAdapter.EventViewHolder evh, final Integer h, final Integer m) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                evh.getClockImageView().animateToTime(h, m);
-                evh.getTvTime().setText(String.format("%d:%d",h, m));
-            }
-        });
-    }
+
 
 
     private boolean isNotificationListenerEnabled() {

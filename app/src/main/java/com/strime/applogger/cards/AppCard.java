@@ -5,7 +5,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -13,13 +12,9 @@ import android.widget.TextView;
 import com.j256.ormlite.android.AndroidDatabaseResults;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.CloseableIterator;
-import com.strime.applogger.App;
-import com.strime.applogger.MainActivity;
 import com.strime.applogger.R;
-import com.strime.applogger.adapter.EventAdapter;
-import com.strime.applogger.adapter.EventNotifAdapter;
+import com.strime.applogger.adapter.AppEventAdapter;
 import com.strime.applogger.database.sqlHelper;
-import com.strime.applogger.interfaces.ManagerListener;
 import com.strime.applogger.model.Event;
 
 import java.sql.SQLException;
@@ -28,12 +23,12 @@ import java.sql.SQLException;
  * Created by gsa13442 on 06/04/2017.
  */
 
-public class AppCard extends RelativeLayout  {
+public class AppCard extends RelativeLayout implements AppEventAdapter.ClickOnChartListener {
     private TextView _title;
     private TextView _explainations;
 
     private RecyclerView _recyclerChart;
-    private EventAdapter mAppAdapter;
+    private AppEventAdapter mAppAdapter;
 
     private FloatingActionButton _fab;
 
@@ -70,7 +65,13 @@ public class AppCard extends RelativeLayout  {
                 updateUI(true);
             }
         });
-
+        _recyclerChart.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAppAdapter.setPie(!mAppAdapter.isPie());
+                updateUI(true);
+            }
+        });
         setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -97,9 +98,8 @@ public class AppCard extends RelativeLayout  {
         if(mAppAdapter == null) {
             CloseableIterator<String[]> iterator = getHelper().getEventIteratorTime(Event.APPLICATION);
             AndroidDatabaseResults appResults = (AndroidDatabaseResults) iterator.getRawResults();
-            mAppAdapter = new EventAdapter(getContext(), appResults.getRawCursor());
+            mAppAdapter = new AppEventAdapter(getContext(), appResults.getRawCursor(), this);
             _recyclerChart.setAdapter(mAppAdapter);
-            //mAppAdapter.notifyDataSetChanged();
         }
         else {
             CloseableIterator<String[]> iterator = mAppAdapter.isShownByDuration() ? getHelper().getEventIteratorTime(Event.APPLICATION) : getHelper().getEventIteratorOcc(Event.APPLICATION);
@@ -115,5 +115,11 @@ public class AppCard extends RelativeLayout  {
             mHelper = OpenHelperManager.getHelper(getContext(), sqlHelper.class);
         }
         return mHelper;
+    }
+
+    @Override
+    public void onClickOnChar() {
+        mAppAdapter.setPie(!mAppAdapter.isPie());
+        updateUI(true);
     }
 }

@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.strime.applogger.R;
-import com.strime.applogger.cards.AppCard;
 import com.strime.applogger.tools.Tools;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
@@ -28,14 +27,16 @@ import java.util.ArrayList;
  * Created by GSA13442 on 28/02/2017.
  */
 
-public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventViewHolder> {
+public class AppEventAdapter extends  CursorRecyclerViewAdapter<AppEventAdapter.EventViewHolder> {
+    private final ClickOnChartListener listener;
     private Context ctx;
     private boolean isPie = true;
     private boolean isShownByDuration = true;
 
-    public EventAdapter(Context context, Cursor cursor) {
+    public AppEventAdapter(Context context, Cursor cursor, ClickOnChartListener listener) {
         super(context, cursor);
         this.ctx = context;
+        this.listener = listener;
     }
 
     public boolean isShownByDuration() {
@@ -58,9 +59,9 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
         PieChart pieChart;
         BarChart barChart;
 
-        EventAdapter parent;
+        AppEventAdapter parent;
 
-        EventViewHolder(View view, final EventAdapter p) {
+        EventViewHolder(View view, final AppEventAdapter p) {
             super(view);
             parent = p;
 
@@ -70,24 +71,26 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
             pieChart = Tools.configurePieChart(pieChart);
             barChart = Tools.configureBarChart(barChart);
 
-
             updateUI();
         }
 
         void updateUI() {
-            pieChart.setVisibility(parent.isPie()?View.VISIBLE:View.GONE);
-            barChart.setVisibility(parent.isPie()?View.GONE:View.VISIBLE);
-
-            /*RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) textExplanation.getLayoutParams();
-            params.addRule(RelativeLayout.BELOW, isPie ? R.id.pie_chart : R.id.bar_chart);
-            textExplanation.setText(isShownByDuration ? "Time in second spend on each applications" : "Number of time you opened each applications");*/
-
+            pieChart.setVisibility(parent.isPie() ? View.VISIBLE : View.GONE);
+            barChart.setVisibility(parent.isPie() ? View.GONE : View.VISIBLE);
         }
     }
 
     @Override
-    public EventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public EventViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.chart_layout, parent, false);
+
+        v.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.onClickOnChar();
+            }
+        });
+
         EventViewHolder evh = new EventViewHolder(v, this);
         return evh;
     }
@@ -159,5 +162,8 @@ public class EventAdapter extends  CursorRecyclerViewAdapter<EventAdapter.EventV
     }
 
 
+    public interface ClickOnChartListener {
+        void onClickOnChar();
+    }
 
 }

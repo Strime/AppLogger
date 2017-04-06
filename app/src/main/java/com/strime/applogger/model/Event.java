@@ -18,6 +18,7 @@ public class Event implements Serializable {
     public static final int ACTION_PHONE = 3;
 
     public static final int NO_ENDING_TIME = -1;
+    public static final String SEPARATOR_NOTIF = "&&";
 
     @DatabaseField(generatedId = true, columnName = "_id")
     private int eventId;

@@ -69,7 +69,7 @@ public class sqlHelper extends OrmLiteSqliteOpenHelper {
     }
 
     public CloseableIterator<Event> getNotifIterator() throws SQLException {
-        return getEventDao().queryBuilder().iterator();
+        return getEventDao().queryBuilder().where().eq("type_event",Event.ACTION_NOTIFICATION).iterator();
     }
     public Event getLastAction(int type_action) throws SQLException {
         final Dao<Event, Integer> eventDao = getEventDao();

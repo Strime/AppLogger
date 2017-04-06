@@ -2,6 +2,8 @@ package com.strime.applogger.service;
 
 import android.app.Notification;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
@@ -24,12 +26,13 @@ public class OMGService extends NotificationListenerService {
     private static final String TAG = "OMGService";
     private HashMap<Integer,Event> notifs = new HashMap<>();
     private sqlHelper mHelper;
+    private PackageManager pm;
 
     @Override
     public void onCreate() {
         super.onCreate();
         OpenHelperManager.setHelper(new sqlHelper(OMGService.this));
-
+        pm = getPackageManager();
         findCurrentNotifications();
     }
 
@@ -79,7 +82,22 @@ public class OMGService extends NotificationListenerService {
         //mPostedNotification = sbn;
         Bundle extras = sbn.getNotification().extras;
         logNLS(String.format("onNotificationPosted : insert... %d (%s)",sbn.getId(),extras.getString(Notification.EXTRA_TITLE)));
-        insertNotification(sbn.getId(), extras.getString(Notification.EXTRA_TITLE) + " / "+extras.getString(Notification.EXTRA_TEXT));
+        insertNotification(sbn.getId(), getAppNameOfPackage(sbn.getPackageName())
+                + Event.SEPARATOR_NOTIF
+                + extras.getString(Notification.EXTRA_TITLE)
+                + Event.SEPARATOR_NOTIF
+                + extras.getString(Notification.EXTRA_TEXT));
+    }
+
+
+    private String getAppNameOfPackage(String processName) {
+        ApplicationInfo ai;
+        try {
+            ai = pm.getApplicationInfo(processName, 0);
+        } catch (final PackageManager.NameNotFoundException e) {
+            ai = null;
+        }
+        return (String) (ai != null ? pm.getApplicationLabel(ai) : "(unknown)");
     }
 
     @Override

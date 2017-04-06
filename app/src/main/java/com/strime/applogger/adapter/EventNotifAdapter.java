@@ -50,7 +50,7 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
     }
 
     public static class EventViewHolder extends RecyclerView.ViewHolder {
-        private final NotificationAdapter notificationAdapter;
+        //private final NotificationAdapter notificationAdapter;
         CardView cv;
         RecyclerView rvNotif;
         ClockImageView clock;
@@ -85,8 +85,8 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
             rvNotif = (RecyclerView) view.findViewById(R.id.rvNotif);
             LinearLayoutManager llm_notif = new LinearLayoutManager(appCtx);
             rvNotif.setLayoutManager(llm_notif);
-            notificationAdapter = new NotificationAdapter(horaires);
-            rvNotif.setAdapter(notificationAdapter);
+            //notificationAdapter = new NotificationAdapter(horaires);
+            //rvNotif.setAdapter(notificationAdapter);
             //digitClock.startActionMode()
             updateUI();
         }
@@ -112,9 +112,9 @@ public class EventNotifAdapter extends  CursorRecyclerViewAdapter<EventNotifAdap
 
     @Override
     public EventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.notif_card_layout, parent, false);
-        EventViewHolder evh = new EventViewHolder(v, ctx, this);
-        return evh;
+        /*-View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.notif_card_layout, parent, false);
+        EventViewHolder evh = new EventViewHolder(v, ctx, this);*/
+        return null;
     }
 
     @Override

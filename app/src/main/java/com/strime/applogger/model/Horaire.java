@@ -12,6 +12,7 @@ public class Horaire {
     public int minute;
     public long timestamp;
 
+    public String[] infos;
     public Event event;
 
     public Horaire(long t, Event event) {
@@ -20,7 +21,7 @@ public class Horaire {
         this.timestamp=t;
         this.hour=cal.get(Calendar.HOUR_OF_DAY);
         this.minute=cal.get(Calendar.MINUTE);
-
         this.event = event;
+        this.infos = this.event.getAppName().split(Event.SEPARATOR_NOTIF);
     }
 }
