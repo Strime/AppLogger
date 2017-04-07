@@ -18,6 +18,7 @@ import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v4.widget.NestedScrollView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -100,8 +101,18 @@ public class MainActivity extends LockActivity implements ManagerListener {
          */
         appCard = (AppCard) findViewById(R.id.event_app_card);
         notifCard = (NotifCard) findViewById(R.id.notif_card);
-        scrollView = (NestedScrollView) findViewById(R.id.scrollView);
 
+        appCard.setUnderCard(notifCard);
+
+        scrollView = (NestedScrollView) findViewById(R.id.scrollView);
+        scrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                final float percent = (scrollY * 1f) / (v.getMaxScrollAmount() - 300);
+                Log.d("TAG SCROLL","p:"+percent);
+                appCard.animMove(percent);
+            }
+        });
         recordCard = (RecordCard) findViewById(R.id.record_card);
         recordCard.setManagerListener(this);
 

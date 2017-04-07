@@ -1,14 +1,19 @@
 package com.strime.applogger.cards;
 
+import android.animation.Animator;
 import android.content.Context;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.github.florent37.expectanim.ExpectAnim;
+import com.github.florent37.expectanim.core.Expectations;
+import com.github.florent37.expectanim.core.custom.CustomAnimExpectation;
 import com.j256.ormlite.android.AndroidDatabaseResults;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.CloseableIterator;
@@ -33,6 +38,8 @@ public class AppCard extends RelativeLayout implements AppEventAdapter.ClickOnCh
     private FloatingActionButton _fab;
 
     private sqlHelper mHelper;
+    private ExpectAnim expectAnimMove;
+    private NotifCard underCard;
 
     public AppCard(Context context) {
         super(context);
@@ -79,7 +86,6 @@ public class AppCard extends RelativeLayout implements AppEventAdapter.ClickOnCh
                 updateUI(true);
             }
         });
-
     }
 
     public void updateUI(boolean serviceRunning) {
@@ -121,5 +127,33 @@ public class AppCard extends RelativeLayout implements AppEventAdapter.ClickOnCh
     public void onClickOnChar() {
         mAppAdapter.setPie(!mAppAdapter.isPie());
         updateUI(true);
+    }
+
+    public void animMove(float percent) {
+        expectAnimMove.setPercent(percent);
+    }
+
+    public void setUnderCard(NotifCard underCard) {
+        this.underCard = underCard;
+        this.expectAnimMove = new ExpectAnim()
+                .expect(_explainations)
+                .toBe(
+                        Expectations.outOfScreen(Gravity.LEFT),
+                        Expectations.alpha(0)
+                )
+                .expect(_fab)
+                .toBe(
+                        Expectations.outOfScreen(Gravity.RIGHT),
+                        Expectations.alpha(0)
+                )
+                .expect(_recyclerChart)
+                .toBe(
+                        Expectations.rightOfParent(),
+                        Expectations.scale(0.9f,0.9f,Gravity.RIGHT, Gravity.BOTTOM)
+                )
+                .expect(this)
+                .toBe(  Expectations.scale(1.f,0.7f,CENTER_HORIZONTAL, Gravity.BOTTOM) )
+                .toAnimation();
+
     }
 }
