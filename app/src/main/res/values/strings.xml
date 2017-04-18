@@ -5,4 +5,11 @@
     <string name="already_launched">SHARED_ALREAD_LAUNCHED</string>
     <string name="android.systemui">com.android.systemui</string>
     <string name="shared_tutorial">tutorial_needed</string>
+    <string name="fa.lock">&#xf023;</string>
+    <string name="fa.calendar">&#xf073;</string>
+    <string name="fa.out">&#xf08b;</string>
+    <string name="fa.pause">&#xf04c;</string>
+    <string name="fa.stop">&#xf04d;</string>
+
+    <string name="pin_changed">Password has been changed</string>
 </resources>

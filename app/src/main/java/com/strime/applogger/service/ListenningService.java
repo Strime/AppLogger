@@ -46,6 +46,7 @@ public class ListenningService extends IntentService {
     private PackageManager pm;
     private String launcherPackage;
     private int confValue;
+    private boolean isPaused = false;
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
@@ -58,6 +59,10 @@ public class ListenningService extends IntentService {
 
     public ListenningService() {
         super("Default Listenning Service");
+    }
+
+    public void setPaused(boolean paused) {
+        isPaused = paused;
     }
 
 
@@ -86,7 +91,6 @@ public class ListenningService extends IntentService {
         intent.addCategory(Intent.CATEGORY_HOME);
         ResolveInfo resolveInfo = getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
         launcherPackage = resolveInfo.activityInfo.packageName;
-
 
         confValue = intent.getIntExtra(conf, 0);
 
@@ -293,6 +297,9 @@ public class ListenningService extends IntentService {
     }
 
     private boolean shouldIgnoreThisPackage(String processName) {
+        if(isPaused) {
+            return true;
+        }
         if(processName.contains(launcherPackage)
                 || processName.contains(getApplicationContext().getPackageName())
                 || processName.contains(getString(R.string.android_systemui))

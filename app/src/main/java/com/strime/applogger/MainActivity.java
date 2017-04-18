@@ -11,15 +11,19 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v4.widget.NestedScrollView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.balram.locker.utils.Locker;
@@ -31,10 +35,19 @@ import com.strime.applogger.cards.NotifCard;
 import com.strime.applogger.cards.RecordCard;
 import com.strime.applogger.database.sqlHelper;
 import com.strime.applogger.interfaces.ManagerListener;
+import com.strime.applogger.myviews.MyButton;
 import com.strime.applogger.service.ListenningService;
+import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
+import com.yarolegovich.slidingrootnav.callback.DragStateListener;
+
+import org.w3c.dom.Text;
+
+import java.util.Calendar;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
-public class MainActivity extends LockActivity implements ManagerListener {
+public class MainActivity extends LockActivity implements ManagerListener, DragStateListener {
 
     /**
      * CONF VALUES
@@ -52,8 +65,18 @@ public class MainActivity extends LockActivity implements ManagerListener {
 
     private NestedScrollView scrollView;
 
+    //MENUS
+    private RelativeLayout relativChangePwd;
+    private RelativeLayout relativHistory;
+    private RelativeLayout relativOut;
+    private TextView _duration;
+    private MyButton _pause;
+    private MyButton _stop;
+
     //SQL
     private BroadcastReceiver receiver;
+    private Timer _timerUpdateTvDuration = new Timer();
+
 
 
     @Override
@@ -63,36 +86,62 @@ public class MainActivity extends LockActivity implements ManagerListener {
         setContentView(R.layout.activity_main);
 
         //startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
-        /*llBottomSheet = findViewById(R.id.bottom_sheet);// init the bottom sheet behavior
-        bottomSheetBehavior = BottomSheetBehavior.from(llBottomSheet);
-        llBottomSheet.setOnClickListener(new View.OnClickListener() {
+        new SlidingRootNavBuilder(this)
+                .withToolbarMenuToggle(toolbar)
+                .withMenuLayout(R.layout.menu_layout)
+                .withDragDistance(140) //Horizontal translation of a view. Default == 180dp
+                .withRootViewScale(0.7f) //Content view's scale will be interpolated between 1f and 0.7f. Default == 0.65f;
+                .withRootViewElevation(10) //Content view's elevation will be interpolated between 0 and 10dp. Default == 8.
+                .withRootViewYTranslation(4) //Content view's translationY will be interpolated between 0 and 4. Default == 0
+                .addDragStateListener(this)
+                .inject();
+
+        relativChangePwd = (RelativeLayout) findViewById(R.id.relativ_change_pwd);
+        relativChangePwd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-                } else {
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                }
+                int type = Locker.CHANGE_PASSWORD;
+                Intent intent = new Intent(MainActivity.this, LockActivity.class);
+                intent.putExtra(Locker.TYPE, type);
+                startActivityForResult(intent, type);
             }
         });
-        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+
+        relativHistory = (RelativeLayout) findViewById(R.id.relativ_history);
+        relativHistory.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                // this part hides the button immediately and waits bottom sheet
-                // to collapse to show
-                if (BottomSheetBehavior.STATE_EXPANDED == newState) {
-                    fab.animate().scaleX(0).scaleY(0).setDuration(300).start();
-                } else if (BottomSheetBehavior.STATE_DRAGGING == newState) {
-                    fab.animate().scaleX(0).scaleY(0).setDuration(300).start();
-                } else if (BottomSheetBehavior.STATE_COLLAPSED == newState) {
-                    fab.animate().scaleX(1).scaleY(1).setDuration(300).start();
-                }
+            public void onClick(View v) {
+                Log.d("TAG","show history now");
             }
-            @Override
-            public void onSlide(@NonNull final View bottomSheet, float slideOffset) {}
         });
-        */
+
+        relativOut = (RelativeLayout) findViewById(R.id.relative_out);
+        relativOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+        _duration = (TextView) findViewById(R.id.tvDuration);
+
+        _stop = (MyButton) findViewById(R.id.btnStop);
+        _stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        _stop = (MyButton) findViewById(R.id.btnStop);
+        _stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //my
+            }
+        });
 
         OpenHelperManager.setHelper(new sqlHelper(MainActivity.this));
 
@@ -105,24 +154,17 @@ public class MainActivity extends LockActivity implements ManagerListener {
         appCard.setUnderCard(notifCard);
 
         scrollView = (NestedScrollView) findViewById(R.id.scrollView);
-        scrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+        /*scrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
             @Override
             public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
                 final float percent = (scrollY * 1f) / (v.getMaxScrollAmount() - 300);
                 Log.d("TAG SCROLL","p:"+percent);
                 appCard.animMove(percent);
             }
-        });
+        });*/
+
         recordCard = (RecordCard) findViewById(R.id.record_card);
         recordCard.setManagerListener(this);
-
-        /**
-         * NOTIF RECYCLER
-         */
-        /*notifLayout = (RelativeLayout) findViewById(R.id.event_notif_recycler);
-
-        cardViewRecord = (CardView) findViewById(R.id.layoutRecord);*/
-
 
         updateUI();
     }
@@ -185,6 +227,8 @@ public class MainActivity extends LockActivity implements ManagerListener {
             intent.putExtra(ListenningService.action, ListenningService.ACTIONS.STARTRECORDING);
             startService(intent);
 
+            SharedPreferences sharedPref = getSharedPreferences(getString(R.string.shared_tutorial),Context.MODE_PRIVATE);
+            sharedPref.edit().putLong("last_started_time", System.currentTimeMillis()).commit();
 
            /* if(appResults.getRawCursor().getCount() > 0) {
                 appCard.setAdapter(mAppAdapter);
@@ -244,7 +288,7 @@ public class MainActivity extends LockActivity implements ManagerListener {
             case Locker.ENABLE_PASSLOCK:
             case Locker.CHANGE_PASSWORD:
                 if (resultCode == RESULT_OK) {
-                    Toast.makeText(this, getString(R.string.setup_passcode),
+                    Toast.makeText(this, getString(R.string.change_passcode),
                             Toast.LENGTH_SHORT).show();
                 }
                 break;
@@ -318,4 +362,39 @@ public class MainActivity extends LockActivity implements ManagerListener {
         updateUI();
     }
 
+    @Override
+    public void onDragStart() {
+
+    }
+
+    @Override
+    public void onDragEnd(boolean isMenuOpened) {
+        if(!isMyServiceRunning(ListenningService.class))
+            return;
+        if(isMenuOpened) {
+            SharedPreferences sharedPref = getSharedPreferences(getString(R.string.shared_tutorial),Context.MODE_PRIVATE);
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(sharedPref.getLong("last_started_time",0));
+
+            String h = cal.get(Calendar.HOUR_OF_DAY) < 10 ? "0"+cal.get(Calendar.HOUR_OF_DAY) : ""+cal.get(Calendar.HOUR_OF_DAY);
+            String m = cal.get(Calendar.MINUTE) < 10 ? "0"+cal.get(Calendar.MINUTE) : ""+cal.get(Calendar.MINUTE);
+            String s = cal.get(Calendar.SECOND) < 10 ? "0"+cal.get(Calendar.SECOND) : ""+cal.get(Calendar.SECOND);
+
+            _duration.setText(String.format("Started at  %s:%s:%s",h,m,s));
+
+            /*_timerUpdateTvDuration.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                        }
+                    });
+                }
+            }, 0, 1000);*/
+        } else {
+            _duration.setText("");
+        }
+
+    }
 }

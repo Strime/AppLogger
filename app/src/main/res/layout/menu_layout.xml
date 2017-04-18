@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+    <com.github.glomadrian.grav.GravView
+        android:id="@+id/grav"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:background="@color/blue_grey_700"
+        app:colorGenerator="com.github.glomadrian.grav.generator.paint.ArrayColorGenerator"
+        app:array_colors="@array/bubble"
+        app:pointGenerator="com.github.glomadrian.grav.generator.point.RegularPointGenerator"
+        app:regular_cell_size="300"
+        app:regular_variance="200"
+        app:gravGenerator="com.github.glomadrian.grav.generator.grav.BallGenerator"
+        app:ball_from_size="10dp"
+        app:ball_to_size="20dp"
+        app:animationGenerators="@array/BubbleAnimations"
+        app:side_to_side_min_duration="6000"
+        app:side_to_side_max_duration="10000"
+        app:side_to_side_direction="leftToRight"
+        app:shake_direction="vertical"
+        app:shake_min_duration="10000"
+        app:shake_max_duration="20000"
+        app:shake_variance="500dp"
+        />
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="70dp"
+        android:background="#22455A64"
+        android:paddingLeft="10dp"
+        android:id="@+id/relativeLayout">
+        <net.bohush.geometricprogressview.GeometricProgressView
+            android:id="@+id/progressView"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:gp_color="@color/blue_grey_50"
+            app:gp_duration="1000"
+            app:gp_figure_padding="3dp"
+            app:gp_number_of_angles="7"
+            app:gp_type="kite" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/progressView"
+            android:layout_toEndOf="@+id/progressView"
+            android:paddingStart="15dp"
+            android:text="Recording..."
+            android:textColor="@color/blue_grey_50"
+            android:textSize="20sp" />
+        <TextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/progressView"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/blue_grey_50"/>
+        <com.strime.applogger.myviews.MyButton
+            android:id="@+id/btnPause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvDuration"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/blue_grey_700"
+            android:text="@string/fa.pause"/>
+        <com.strime.applogger.myviews.MyButton
+            android:id="@+id/btnStop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvDuration"
+            android:layout_toRightOf="@id/btnPause"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/blue_grey_700"
+            android:text="@string/fa.stop"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:background="#22455A64"
+        android:layout_marginTop="48dp"
+        android:id="@+id/relativ_history"
+        android:layout_below="@+id/relativeLayout"
+        android:layout_alignParentStart="true">
+        <com.strime.applogger.myviews.MyTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/progressView"
+            android:text="@string/fa.calendar"
+            android:paddingTop="2dp"
+            android:textColor="@color/blue_grey_50"
+            android:textSize="18sp"
+            android:id="@+id/logoHistory" />
+        <TextView
+            android:id="@+id/tvHistory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/myTextView"
+            android:paddingLeft="24dp"
+            android:paddingStart="24dp"
+            android:text="Show history"
+            android:paddingBottom="2dp"
+            android:textColor="@color/blue_grey_50"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:background="#22455A64"
+        android:layout_marginTop="15dp"
+        android:id="@+id/relativ_change_pwd"
+        android:layout_below="@+id/relativ_history"
+        android:layout_alignParentStart="true">
+        <com.strime.applogger.myviews.MyTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/progressView"
+            android:text="@string/fa.lock"
+            android:paddingTop="2dp"
+            android:paddingLeft="3dp"
+            android:textColor="@color/blue_grey_50"
+            android:textSize="18sp"
+            android:id="@+id/myTextView" />
+
+        <TextView
+            android:id="@+id/tvChangePwd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="24dp"
+            android:paddingStart="24dp"
+            android:text="Change password"
+            android:paddingBottom="2dp"
+            android:textColor="@color/blue_grey_50"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:background="#22455A64"
+        android:layout_marginTop="15dp"
+        android:id="@+id/relative_out"
+        android:layout_marginBottom="90dp"
+        android:layout_alignParentBottom="true">
+        <com.strime.applogger.myviews.MyTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/progressView"
+            android:text="@string/fa.out"
+            android:paddingTop="2dp"
+            android:paddingLeft="3dp"
+            android:textColor="@color/blue_grey_50"
+            android:textSize="18sp"
+            android:id="@+id/logoOut" />
+
+        <TextView
+            android:id="@+id/tvOut"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/logoOut"
+            android:layout_alignParentEnd="true"
+            android:paddingLeft="24dp"
+            android:paddingBottom="2dp"
+            android:paddingStart="24dp"
+            android:text="Quit"
+            android:textColor="@color/blue_grey_50"
+            android:textSize="16sp" />
+    </RelativeLayout>
+</RelativeLayout>
