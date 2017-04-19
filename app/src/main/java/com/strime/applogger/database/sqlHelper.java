@@ -11,6 +11,7 @@ import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.strime.applogger.model.Notif;
 
 import java.sql.SQLException;
 
@@ -19,11 +20,12 @@ import java.sql.SQLException;
  */
 
 public class sqlHelper extends OrmLiteSqliteOpenHelper {
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "AppLogger.db";
     private static final String TAG = "sqlHelper";
 
     private Dao<Event, Integer> eventDao;
+    private Dao<Notif, Integer> notif;
 
     public sqlHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION, R.raw.ormlite_config);
@@ -33,6 +35,7 @@ public class sqlHelper extends OrmLiteSqliteOpenHelper {
     public void onCreate(SQLiteDatabase database, ConnectionSource connectionSource) {
         try {
             TableUtils.createTable(connectionSource, Event.class);
+            TableUtils.createTable(connectionSource, Notif.class);
         } catch (SQLException e) {
             Log.d(TAG, "Unable to create database",e);
         }
@@ -42,6 +45,7 @@ public class sqlHelper extends OrmLiteSqliteOpenHelper {
     public void onUpgrade(SQLiteDatabase database, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         try {
             TableUtils.dropTable(connectionSource, Event.class, true);
+            TableUtils.dropTable(connectionSource, Notif.class, true);
             onCreate(database, connectionSource);
         } catch (SQLException e) {
             Log.d(TAG, "Unable to drop database",e);
@@ -56,6 +60,12 @@ public class sqlHelper extends OrmLiteSqliteOpenHelper {
         return eventDao;
     }
 
+    public Dao<Notif,Integer> getNotifDao() throws SQLException {
+        if(notif == null) {
+            notif = getDao(Notif.class);
+        }
+        return notif;
+    }
 
     public CloseableIterator<String[]> getEventIteratorOcc(int id_type_event) throws SQLException {
         return getEventDao().queryRaw("SELECT COUNT(inserted_time) AS nbOcc, event_name, _id FROM app_event where type_event = " + id_type_event +
@@ -68,9 +78,14 @@ public class sqlHelper extends OrmLiteSqliteOpenHelper {
                 " GROUP BY event_name").closeableIterator();
     }
 
-    public CloseableIterator<Event> getNotifIterator() throws SQLException {
-        return getEventDao().queryBuilder().where().eq("type_event",Event.ACTION_NOTIFICATION).iterator();
+    public CloseableIterator<Notif> getNotifIterator() throws SQLException {
+        return getNotifDao().queryBuilder().iterator();
     }
+
+    public Notif getLastNotifByName(String name) throws SQLException {
+        return getNotifDao().queryBuilder().orderBy("_id", false).where().eq("notif_name", name).queryForFirst();
+    }
+
     public Event getLastAction(int type_action) throws SQLException {
         final Dao<Event, Integer> eventDao = getEventDao();
         return eventDao.queryBuilder().orderBy("_id", false).where().eq("type_event", type_action).queryForFirst();
@@ -79,4 +94,5 @@ public class sqlHelper extends OrmLiteSqliteOpenHelper {
     public void update(Event e) throws SQLException {
         getEventDao().update(e);
     }
+
 }

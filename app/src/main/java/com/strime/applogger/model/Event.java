@@ -14,11 +14,9 @@ import com.j256.ormlite.table.DatabaseTable;
 public class Event implements Serializable {
     public static final int APPLICATION = 0;
     public static final int ACTION_SHUTDOWN = 1;
-    public static final int ACTION_NOTIFICATION = 2;
-    public static final int ACTION_PHONE = 3;
+    public static final int ACTION_PHONE = 2;
 
     public static final int NO_ENDING_TIME = -1;
-    public static final String SEPARATOR_NOTIF = "&&";
 
     @DatabaseField(generatedId = true, columnName = "_id")
     private int eventId;
@@ -48,10 +46,7 @@ public class Event implements Serializable {
 
         this.insertedTime =  System.currentTimeMillis();
         this.endTime = NO_ENDING_TIME;
-        if(type != ACTION_NOTIFICATION) {
-            this.endTime = System.currentTimeMillis();
-        }
-
+        this.endTime = System.currentTimeMillis();
 
         this.appName=appName;
         this.typeEvent = type;
@@ -95,13 +90,5 @@ public class Event implements Serializable {
 
     public void setTypeEvent(int typeEvent) {
         this.typeEvent = typeEvent;
-    }
-
-
-    public ArrayList<Horaire> getsHoraires() {
-        ArrayList<Horaire> horaires = new ArrayList<>();
-        horaires.add(new Horaire(getInsertedTime(),this));
-        horaires.add(new Horaire(getEndTime(),this));
-        return horaires;
     }
 }

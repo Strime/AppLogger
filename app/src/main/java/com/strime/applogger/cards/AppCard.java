@@ -103,9 +103,11 @@ public class AppCard extends RelativeLayout implements AppEventAdapter.ClickOnCh
     public void refreshAdapter() throws SQLException {
         if(mAppAdapter == null) {
             CloseableIterator<String[]> iterator = getHelper().getEventIteratorTime(Event.APPLICATION);
-            AndroidDatabaseResults appResults = (AndroidDatabaseResults) iterator.getRawResults();
-            mAppAdapter = new AppEventAdapter(getContext(), appResults.getRawCursor(), this);
-            _recyclerChart.setAdapter(mAppAdapter);
+            if(iterator.hasNext()) {
+                AndroidDatabaseResults appResults = (AndroidDatabaseResults) iterator.getRawResults();
+                mAppAdapter = new AppEventAdapter(getContext(), appResults.getRawCursor(), this);
+                _recyclerChart.setAdapter(mAppAdapter);
+            }
         }
         else {
             CloseableIterator<String[]> iterator = mAppAdapter.isShownByDuration() ? getHelper().getEventIteratorTime(Event.APPLICATION) : getHelper().getEventIteratorOcc(Event.APPLICATION);
@@ -113,7 +115,6 @@ public class AppCard extends RelativeLayout implements AppEventAdapter.ClickOnCh
             mAppAdapter.swapCursor(r.getRawCursor());
             mAppAdapter.notifyDataSetChanged();
         }
-
     }
 
     public sqlHelper getHelper() {

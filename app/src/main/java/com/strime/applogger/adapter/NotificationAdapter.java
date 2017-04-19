@@ -61,11 +61,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     @Override
     public void onBindViewHolder(NotifViewHolder holder, int position) {
-        Log.d("ITEM COUNT","!!!"+ horairesOnCurrentTimestamp.get(position).event.getAppName());
-        String[] infos = horairesOnCurrentTimestamp.get(position).infos;
+        Log.d("ITEM COUNT","!!!"+ horairesOnCurrentTimestamp.get(position).notif.getNotifName());
 
-        holder.info.setText(infos[0] + " : "+infos[1]);
-        holder.moreInfo.setText(infos[2]);
+        holder.info.setText(horairesOnCurrentTimestamp.get(position).notif.getNotifName());
+        holder.moreInfo.setText(horairesOnCurrentTimestamp.get(position).notif.getNotifInfos());
 
         setAnimation(holder.itemView, position);
     }

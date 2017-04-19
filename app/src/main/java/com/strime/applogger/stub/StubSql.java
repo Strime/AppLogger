@@ -19,7 +19,7 @@ public class StubSql {
         cal.set(Calendar.HOUR_OF_DAY,17);
         cal.set(Calendar.MINUTE,30);
 
-        ArrayList<Event> res = new ArrayList<>();
+        /*ArrayList<Event> res = new ArrayList<>();
 
         Event event_1 = new Event(String.format("Dealabs%sNotification Title%sDescription more details",Event.SEPARATOR_NOTIF,Event.SEPARATOR_NOTIF), Event.ACTION_NOTIFICATION);
         event_1.setInsertedTime(cal.getTimeInMillis());
@@ -51,8 +51,8 @@ public class StubSql {
         cal.set(Calendar.HOUR_OF_DAY,19);
         cal.set(Calendar.MINUTE,07);
         event_4.setEndTime(cal.getTimeInMillis());
-        res.add(event_4);
+        res.add(event_4);*/
 
-        return res;
+        return null;
     }
 }

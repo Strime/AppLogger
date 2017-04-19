@@ -11,27 +11,25 @@ import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
 import com.strime.applogger.database.sqlHelper;
-import com.strime.applogger.model.Event;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
+import com.strime.applogger.model.Notif;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 
 /**
  * Created by gsa13442 on 04/04/2017.
  */
 
-public class OMGService extends NotificationListenerService {
-    private static final String TAG = "OMGService";
-    private HashMap<Integer,Event> notifs = new HashMap<>();
+public class NotificationService extends NotificationListenerService {
+    private static final String TAG = "NotificationService";
     private sqlHelper mHelper;
     private PackageManager pm;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        OpenHelperManager.setHelper(new sqlHelper(OMGService.this));
+        OpenHelperManager.setHelper(new sqlHelper(NotificationService.this));
         pm = getPackageManager();
         findCurrentNotifications();
     }
@@ -50,27 +48,26 @@ public class OMGService extends NotificationListenerService {
 
     private sqlHelper getHelper() {
         if(mHelper == null){
-            mHelper = OpenHelperManager.getHelper(OMGService.this, sqlHelper.class);
+            mHelper = OpenHelperManager.getHelper(NotificationService.this, sqlHelper.class);
         }
         return mHelper;
     }
 
-    private void insertNotification(Integer snbId, String text) {
+    private void insertNotification(Integer snbId, String text, String infos, String moreInfos) {
         try {
-            final Dao<Event, Integer> eventDao = getHelper().getEventDao();
-            notifs.put(snbId, new Event(text, Event.ACTION_NOTIFICATION));
-            eventDao.create(notifs.get(notifs.size()-1));
+            final Dao<Notif, Integer> eventDao = getHelper().getNotifDao();
+            eventDao.create(new Notif(text, infos, moreInfos));
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    private void deleteNotification(Integer snbId) {
+    private void deleteNotification(String notifAppName) {
         try {
-            final Dao<Event, Integer> eventDao = getHelper().getEventDao();
-            Event notif = notifs.remove(snbId);
+            logNLS(String.format("delete notif %s",notifAppName));
+            Notif notif = getHelper().getLastNotifByName(notifAppName);
             notif.setEndTime(System.currentTimeMillis());
-            eventDao.update(notif);
+            getHelper().getNotifDao().update(notif);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -82,11 +79,8 @@ public class OMGService extends NotificationListenerService {
         //mPostedNotification = sbn;
         Bundle extras = sbn.getNotification().extras;
         logNLS(String.format("onNotificationPosted : insert... %d (%s)",sbn.getId(),extras.getString(Notification.EXTRA_TITLE)));
-        insertNotification(sbn.getId(), getAppNameOfPackage(sbn.getPackageName())
-                + Event.SEPARATOR_NOTIF
-                + extras.getString(Notification.EXTRA_TITLE)
-                + Event.SEPARATOR_NOTIF
-                + extras.getString(Notification.EXTRA_TEXT));
+        insertNotification(sbn.getId(), ""+getAppNameOfPackage(sbn.getPackageName()),extras.getString(Notification.EXTRA_TITLE)
+                ,extras.getString(Notification.EXTRA_TEXT));
     }
 
 
@@ -104,9 +98,9 @@ public class OMGService extends NotificationListenerService {
     public void onNotificationRemoved(StatusBarNotification sbn) {
 
         Bundle extras = sbn.getNotification().extras;
-        logNLS(String.format("onNotificationRemoved : removed... %d (%s)",sbn.getId(),extras.getString(Notification.EXTRA_TITLE)));
+        logNLS(String.format("onNotificationRemoved : removed... %s (%s)",""+getAppNameOfPackage(sbn.getPackageName()),extras.getString(Notification.EXTRA_TITLE)));
 
-        deleteNotification(sbn.getId());
+        deleteNotification(""+getAppNameOfPackage(sbn.getPackageName()));
     }
 
     private void findCurrentNotifications() {
@@ -115,7 +109,7 @@ public class OMGService extends NotificationListenerService {
             for (StatusBarNotification activeNos : activesNos) {
                 Bundle extras = activeNos.getNotification().extras;
                 logNLS(String.format("findCurrentNotifications : insert... %d (%s)", activeNos.getId(), extras.getString(Notification.EXTRA_TITLE)));
-                insertNotification(activeNos.getId(), extras.getString(Notification.EXTRA_TITLE) + " / " + extras.getString(Notification.EXTRA_TEXT));
+                insertNotification(activeNos.getId(), extras.getString(Notification.EXTRA_TITLE) + " / " + extras.getString(Notification.EXTRA_TEXT), extras.getString(Notification.EXTRA_TITLE), extras.getString(Notification.EXTRA_TEXT));
             }
         }
     }

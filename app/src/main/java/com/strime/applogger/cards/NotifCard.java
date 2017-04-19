@@ -11,11 +11,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.j256.ormlite.dao.CloseableIterator;
 import com.strime.applogger.R;
 import com.strime.applogger.adapter.NotificationAdapter;
 import com.strime.applogger.database.sqlHelper;
 import com.strime.applogger.model.Event;
 import com.strime.applogger.model.Horaire;
+import com.strime.applogger.model.Notif;
 import com.strime.applogger.stub.StubSql;
 
 import java.sql.SQLException;
@@ -98,18 +100,22 @@ public class NotifCard extends RelativeLayout  {
     public void refreshAdapter()  {
 
         ArrayList<Horaire> horaires = new ArrayList<>();
-        /*
-        CloseableIterator<Event> iterator = getHelper().getNotifIterator();
-        while (iterator.hasNext()) {
-            horaires.addAll(iterator.next().getsHoraires());
-        }*/
-        ArrayList<Event> events = StubSql.getStubNotifEvent();
-        for(Event e : events) {
-            horaires.addAll(e.getsHoraires());
+
+        CloseableIterator<Notif> iterator = null;
+        try {
+
+            iterator = getHelper().getNotifIterator();
+            while (iterator.hasNext()) {
+                horaires.addAll(iterator.next().getsHoraires());
+            }
+            if(!horaires.isEmpty()) {
+                mNotifAdapter = new NotificationAdapter(getContext(), _clock, _time, horaires);
+                _rvNotif.setAdapter(mNotifAdapter);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
-        mNotifAdapter = new NotificationAdapter(getContext(), _clock, _time, horaires);
-        _rvNotif.setAdapter(mNotifAdapter);
     }
 
     public sqlHelper getHelper() {

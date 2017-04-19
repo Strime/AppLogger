@@ -10,9 +10,9 @@ columnName=insertedTime
 # --End_time--
 fieldName=end_time
 columnName=endTime
-# --appName--
+# --notifName--
 fieldName=app_name
-columnName=appName
-# --appName--
+columnName=notifName
+# --notifName--
 fieldName=type_event
 columnName=typeEvent
